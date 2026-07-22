@@ -1,0 +1,869 @@
+<!-- Header -->
+<div class="row">
+  <div class="col-12">
+    <div
+      class="page-title-box d-flex align-items-center justify-content-between"
+    >
+      <h4 class="mb-0">Gestion des Commandes</h4>
+    </div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-3">
+  <div class="col-md-6">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Rechercher par nom ou email..."
+      [(ngModel)]="searchTerm"
+      (input)="filterOrders()"
+    />
+  </div>
+  <div class="col-md-3">
+    <select
+      class="form-select"
+      [(ngModel)]="selectedStatus"
+      (change)="filterOrders()"
+    >
+      <option value="all">Tous les statuts</option>
+      <option value="pending">En attente</option>
+      <option value="under_review">En revue</option>
+      <option value="phone_confirmed">Confirmé téléphone</option>
+      <option value="doctor_assigned">Docteur assigné</option>
+      <option value="doctor_replied">Docteur a répondu</option>
+      <option value="appointment_scheduled">RDV programmé</option>
+      <option value="completed">Terminé</option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <span class="badge bg-primary"
+      >{{ filteredOrders.length }} commande(s)</span
+    >
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="isLoading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Chargement...</span>
+  </div>
+</div>
+
+<!-- Orders List -->
+<div *ngIf="!isLoading" class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <div
+          class="table-responsive"
+          style="max-height: 500px; overflow-x: auto"
+        >
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Procédure</th>
+                <th>Catégorie</th>
+                <th>Pack</th>
+                <th>Statut</th>
+                <th>Paiement</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let order of filteredOrders"
+                [class.table-active]="selectedOrder?._id === order._id"
+                (click)="selectOrder(order)"
+              >
+                <td>
+                  <strong>{{ order.clientInfo.name }}</strong>
+                  <br />
+                  <small class="text-muted"
+                    >{{ order.clientInfo.age }} ans</small
+                  >
+                </td>
+                <td>{{ order.clientInfo.email }}</td>
+                <td>{{ order.clientInfo.phone }}</td>
+                <td>
+                  {{ getCategoryName(order.category) }}
+                </td>
+                <td>
+                  <!-- Catégorie générale -->
+                  {{ getGeneralCategoryName(order.generalCategory) }}
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark">{{ order.pack }}</span>
+                </td>
+
+                <td>
+                  <span
+                    class="badge"
+                    [ngClass]="getStatusBadgeClass(order.status)"
+                  >
+                    {{ getStatusText(order.status) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge" [ngClass]="getPaymentBadgeClass(order)">
+                    {{ getPaymentStatusText(order) }}
+                  </span>
+                </td>
+                <td>
+                  <small>{{ order.createdAt | date: "dd/MM/yyyy" }}</small>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#orderDetailsModal"
+                  >
+                    Détails
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredOrders.length === 0" class="text-center py-5">
+          <p class="text-muted">Aucune commande trouvée</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Order Details Modal -->
+<div
+  class="modal fade"
+  id="orderDetailsModal"
+  tabindex="-1"
+  aria-hidden="true"
+  *ngIf="selectedOrder"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          Détails de la commande - {{ selectedOrder.clientInfo.name }}
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Client Information -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6>Informations Client</h6>
+            <div class="row">
+              <div class="col-md-6">
+                <p><strong>Nom:</strong> {{ selectedOrder.clientInfo.name }}</p>
+                <p>
+                  <strong>Email:</strong> {{ selectedOrder.clientInfo.email }}
+                </p>
+                <p>
+                  <strong>Téléphone:</strong>
+                  {{ selectedOrder.clientInfo.phone }}
+                </p>
+              </div>
+              <div class="col-md-6">
+                <p>
+                  <strong>Âge:</strong> {{ selectedOrder.clientInfo.age }} ans
+                </p>
+                <p>
+                  <strong>Poids:</strong>
+                  {{ selectedOrder.clientInfo.weight }} kg
+                </p>
+                <p>
+                  <strong>Taille:</strong>
+                  {{ selectedOrder.clientInfo.height }} cm
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Information -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h6>Informations Commande</h6>
+            <p>
+              <strong>Procédure:</strong>
+              {{ selectedOrder.categoryName || "Non spécifié" }}
+            </p>
+            <p>
+              <strong>Catégorie:</strong>
+              {{ selectedOrder.generalCategoryName || "Non spécifié" }}
+            </p>
+            <p><strong>Pack:</strong> {{ selectedOrder.pack }}</p>
+            <p>
+              <strong>Statut:</strong>
+              <span
+                class="badge"
+                [ngClass]="getStatusBadgeClass(selectedOrder.status)"
+              >
+                {{ getStatusText(selectedOrder.status) }}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- ✅ WORKFLOW CORRECT AVEC L'ORDRE MODIFIÉ -->
+        <div class="row mb-3">
+          <div class="col-12">
+            <h5 class="mb-4 text-primary">Workflow de Traitement</h5>
+
+            <!-- Étape 1: Assigner un docteur -->
+            <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    1
+                  </div>
+                  <h6 class="mb-0 text-dark">Assignation Docteur</h6>
+                </div>
+
+                <div
+                  *ngIf="
+                    selectedOrder.status === 'under_review' ||
+                    selectedOrder.status === 'pending'
+                  "
+                >
+                  <label class="form-label fw-semibold"
+                    >Choisir un docteur:</label
+                  >
+                  <select class="form-select" [(ngModel)]="selectedDoctorId">
+                    <option value="">Sélectionner un docteur</option>
+                    <option
+                      *ngFor="let doctor of filterDoctorsByGeneralCategory()"
+                      [value]="doctor._id"
+                    >
+                      Dr. {{ doctor.personalInfo.name }} -
+                      {{ doctor.personalInfo.specialties }}
+                    </option>
+                  </select>
+
+                  <div
+                    *ngIf="filterDoctorsByGeneralCategory().length === 0"
+                    class="alert alert-warning mt-2"
+                  >
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Aucun médecin disponible pour la catégorie "{{
+                      getGeneralCategoryName(selectedOrder.generalCategory)
+                    }}"
+                  </div>
+
+                  <button
+                    class="btn btn-primary mt-3"
+                    (click)="assignDoctor()"
+                    [disabled]="
+                      !selectedDoctorId ||
+                      filterDoctorsByGeneralCategory().length === 0
+                    "
+                  >
+                    <i class="bi bi-person-plus me-2"></i>Assigner le Docteur
+                  </button>
+                </div>
+
+                <div
+                  *ngIf="
+                    selectedOrder.status !== 'under_review' &&
+                    selectedOrder.status !== 'pending'
+                  "
+                  class="mt-3"
+                >
+                  <div class="d-flex align-items-center text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span
+                      >Docteur assigné le
+                      {{
+                        selectedOrder.workflow.sentToDoctorAt
+                          | date: "dd/MM/yyyy"
+                      }}</span
+                    >
+                  </div>
+                  <div
+                    *ngIf="selectedOrder.assignedToDoctor"
+                    class="mt-2 p-3 bg-light rounded border"
+                  >
+                    <strong class="text-dark">Docteur assigné:</strong>
+                    <p class="mb-0 text-dark">{{ getAssignedDoctorName() }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étape 2: Réponse du docteur -->
+            <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    2
+                  </div>
+                  <h6 class="mb-0 text-dark">Réponse du Docteur</h6>
+                </div>
+
+                <div *ngIf="selectedOrder.status === 'doctor_assigned'">
+                  <label class="form-label fw-semibold"
+                    >Remarques médicales du docteur:</label
+                  >
+                  <textarea
+                    class="form-control"
+                    [(ngModel)]="doctorRemarks"
+                    rows="3"
+                    placeholder="Remarques, contre-indications, recommandations médicales..."
+                  ></textarea>
+                  <button
+                    class="btn btn-info mt-3 text-white me-2"
+                    (click)="submitDoctorRemarks()"
+                    [disabled]="!doctorRemarks"
+                  >
+                    <i class="bi bi-clipboard-check me-2"></i>Soumettre les
+                    Remarques Médicales
+                  </button>
+                </div>
+                <div
+                  *ngIf="
+                    selectedOrder.status === 'doctor_replied' ||
+                    selectedOrder.status === 'phone_confirmed' ||
+                    selectedOrder.status === 'appointment_scheduled' ||
+                    selectedOrder.status === 'completed'
+                  "
+                  class="mt-3"
+                >
+                  <div class="d-flex align-items-center text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span
+                      >Docteur a répondu le
+                      {{
+                        selectedOrder.workflow.doctorRepliedAt
+                          | date: "dd/MM/yyyy"
+                      }}</span
+                    >
+                  </div>
+                  <div
+                    *ngIf="selectedOrder.notes.doctorRemarks"
+                    class="mt-2 p-3 bg-light rounded border"
+                  >
+                    <strong class="text-dark">Remarques du docteur:</strong>
+                    <p class="mb-0 text-dark">
+                      {{ selectedOrder.notes.doctorRemarks }}
+                    </p>
+                  </div>
+
+                  <!-- AJOUT: Bouton pour envoyer l'email au client -->
+                  <div
+                    class="mt-3"
+                    *ngIf="selectedOrder.status === 'doctor_replied'"
+                  >
+                    <div class="alert alert-info mb-2">
+                      <i class="bi bi-info-circle me-2"></i>
+                      Cliquez sur le bouton ci-dessous pour envoyer un email au
+                      client avec la réponse du docteur.
+                    </div>
+                    <button
+                      class="btn btn-success"
+                      (click)="sendDoctorRemarksEmail()"
+                      [disabled]="!selectedOrder.notes.doctorRemarks"
+                    >
+                      <i class="bi bi-envelope-paper me-2"></i>Envoyer la
+                      Réponse au Client par Email
+                    </button>
+                    <div *ngIf="emailStatus" class="mt-2">
+                      <small [class]="emailStatusClass">{{
+                        emailStatus
+                      }}</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étape 3: Confirmer l'appel téléphonique -->
+            <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    3
+                  </div>
+                  <h6 class="mb-0 text-dark">Confirmation Téléphonique</h6>
+                </div>
+
+                <div *ngIf="selectedOrder.status === 'doctor_replied'">
+                  <div class="row">
+                    <!-- Champ pour la date d'arrivée -->
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Date d'arrivée prévue:</label
+                      >
+                      <input
+                        type="date"
+                        class="form-control"
+                        [(ngModel)]="arrivalDate"
+                        [min]="minDate"
+                      />
+                    </div>
+
+                    <!-- Champ pour les notes (optionnel) -->
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Notes d'appel (optionnel):</label
+                      >
+                      <textarea
+                        class="form-control"
+                        [(ngModel)]="phoneCallNotes"
+                        rows="2"
+                        placeholder="Notes supplémentaires..."
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <!-- BOUTON POUR APPELER /phone-confirm -->
+                  <button
+                    class="btn btn-success mt-3"
+                    (click)="confirmPhoneCall()"
+                    [disabled]="!arrivalDate"
+                  >
+                    <i class="bi bi-telephone-fill me-2"></i>Confirmer Appel
+                    Téléphonique
+                  </button>
+                </div>
+
+                <div
+                  *ngIf="
+                    selectedOrder.status !== 'doctor_replied' &&
+                    selectedOrder.status !== 'doctor_assigned'
+                  "
+                  class="mt-3"
+                >
+                  <div class="d-flex align-items-center text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span
+                      >Confirmé le
+                      {{
+                        selectedOrder.workflow.phoneConfirmedAt
+                          | date: "dd/MM/yyyy"
+                      }}</span
+                    >
+                  </div>
+                  <div
+                    *ngIf="selectedOrder.arrivalDate"
+                    class="mt-2 text-muted"
+                  >
+                    <i class="bi bi-calendar-event me-2"></i>
+                    <span
+                      >Date d'arrivée:
+                      {{ selectedOrder.arrivalDate | date: "dd/MM/yyyy" }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étape 4: Programmer RDV -->
+            <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    4
+                  </div>
+                  <h6 class="mb-0 text-dark">Programmer Rendez-vous</h6>
+                </div>
+
+                <div *ngIf="selectedOrder.status === 'phone_confirmed'">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Date du rendez-vous:</label
+                      >
+                      <input
+                        type="datetime-local"
+                        class="form-control"
+                        [(ngModel)]="appointmentDate"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Lieu du rendez-vous:</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="appointmentLocation"
+                        placeholder="Clinique, adresse..."
+                      />
+                    </div>
+                  </div>
+                  <div class="row mt-2">
+                    <div class="col-12">
+                      <label class="form-label fw-semibold"
+                        >Instructions supplémentaires:</label
+                      >
+                      <textarea
+                        class="form-control"
+                        [(ngModel)]="appointmentNotes"
+                        rows="2"
+                        placeholder="Instructions pour le patient..."
+                      ></textarea>
+                    </div>
+                  </div>
+                  <button
+                    class="btn btn-warning mt-3 text-dark"
+                    (click)="scheduleAppointment()"
+                    [disabled]="!appointmentDate || !appointmentLocation"
+                  >
+                    <i class="bi bi-calendar-plus me-2"></i>Programmer le
+                    Rendez-vous
+                  </button>
+                </div>
+                <div
+                  *ngIf="
+                    selectedOrder.status === 'appointment_scheduled' ||
+                    selectedOrder.status === 'completed'
+                  "
+                  class="mt-3"
+                >
+                  <div class="d-flex align-items-center text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span
+                      >Rendez-vous programmé le
+                      {{
+                        selectedOrder.workflow.appointmentScheduledAt
+                          | date: "dd/MM/yyyy"
+                      }}</span
+                    >
+                  </div>
+                  <div class="mt-2 p-3 bg-light rounded border">
+                    <strong class="text-dark">Détails du rendez-vous:</strong>
+                    <p class="mb-1 text-dark">
+                      <strong>Date:</strong>
+                      {{
+                        selectedOrder.appointmentDate
+                          | date: "dd/MM/yyyy à HH:mm"
+                      }}
+                    </p>
+                    <p class="mb-1 text-dark">
+                      <strong>Lieu:</strong>
+                      {{ selectedOrder.appointmentLocation }}
+                    </p>
+                    <p
+                      class="mb-0 text-dark"
+                      *ngIf="selectedOrder.notes.appointmentNotes"
+                    >
+                      <strong>Instructions:</strong>
+                      {{ selectedOrder.notes.appointmentNotes }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étape 5: Définir le prix -->
+            <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+              *ngIf="
+                selectedOrder?.status === 'appointment_scheduled' ||
+                selectedOrder?.status === 'completed'
+              "
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    5
+                  </div>
+                  <h6 class="mb-0 text-dark">Définir le Prix</h6>
+                </div>
+
+                <div *ngIf="!selectedOrder?.price">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Prix final (€):</label
+                      >
+                      <div class="input-group">
+                        <input
+                          type="number"
+                          class="form-control"
+                          [(ngModel)]="price"
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                        />
+                        <span class="input-group-text">€</span>
+                      </div>
+                      <small class="text-muted"
+                        >Entrez le prix final de la procédure</small
+                      >
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fw-semibold"
+                        >Notes sur le prix (optionnel):</label
+                      >
+                      <textarea
+                        class="form-control"
+                        [(ngModel)]="priceNotes"
+                        rows="2"
+                        placeholder="Détails sur le prix, inclusions, exclusions..."
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <button
+                    class="btn btn-primary mt-3"
+                    (click)="savePrice()"
+                    [disabled]="!price || price <= 0"
+                  >
+                    <i class="bi bi-currency-euro me-2"></i>Enregistrer le Prix
+                  </button>
+                </div>
+
+                <div *ngIf="selectedOrder?.price" class="mt-3">
+                  <div class="d-flex align-items-center text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span>Prix défini</span>
+                  </div>
+                  <div class="mt-2 p-3 bg-light rounded border">
+                    <strong class="text-dark">Prix de la procédure:</strong>
+                    <p class="mb-0 text-dark fs-5 fw-bold">
+                      {{
+                        selectedOrder.price
+                          | currency: "EUR" : "symbol" : "1.2-2"
+                      }}
+                    </p>
+                    <div *ngIf="selectedOrder.notes?.price" class="mt-1">
+                      <small class="text-muted">{{
+                        selectedOrder.notes.price
+                      }}</small>
+                    </div>
+                    <div
+                      *ngIf="selectedOrder.workflow?.priceSetAt"
+                      class="mt-1"
+                    >
+                      <small class="text-muted">
+                        Défini le
+                        {{
+                          selectedOrder.workflow.priceSetAt | date: "dd/MM/yyyy"
+                        }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étape 6: Envoyer la facture et gérer le paiement -->
+            <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+              *ngIf="
+                selectedOrder?.status === 'appointment_scheduled' &&
+                selectedOrder?.price
+              "
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    6
+                  </div>
+                  <h6 class="mb-0 text-dark">Paiement en Ligne</h6>
+                </div>
+
+                <div *ngIf="!selectedOrder?.isDepositPaid">
+                  <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Envoyez la facture au client pour qu'il puisse payer 10% du
+                    montant en ligne.
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-8">
+                      <div class="card">
+                        <div class="card-body">
+                          <h6 class="card-title">Détails du paiement</h6>
+                          <p>
+                            <strong>Montant total :</strong>
+                            {{
+                              selectedOrder.price
+                                | currency: "EUR" : "symbol" : "1.2-2"
+                            }}
+                          </p>
+                          <p>
+                            <strong>Dépôt à payer (10%) :</strong>
+                            {{
+                              (selectedOrder.price || 0) * 0.1
+                                | currency: "EUR" : "symbol" : "1.2-2"
+                            }}
+                          </p>
+                          <p>
+                            <strong>Solde :</strong>
+                            {{
+                              (selectedOrder.price || 0) * 0.1
+                                | currency: "EUR" : "symbol" : "1.2-2"
+                            }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button class="btn btn-success mt-3" (click)="sendInvoice()">
+                    <i class="bi bi-envelope-check me-2"></i>Envoyer la Facture
+                    par Email
+                  </button>
+
+                  <div *ngIf="invoiceStatus" class="mt-2">
+                    <small [class]="invoiceStatusClass">{{
+                      invoiceStatus
+                    }}</small>
+                  </div>
+                </div>
+
+                <div *ngIf="selectedOrder?.isDepositPaid" class="mt-3">
+                  <div class="d-flex align-items-center text-success">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span
+                      >Dépôt payé le
+                      {{
+                        selectedOrder.stripe?.paidAt | date: "dd/MM/yyyy"
+                      }}</span
+                    >
+                  </div>
+                  <div class="mt-2 p-3 bg-light rounded border">
+                    <strong class="text-dark">Paiement confirmé :</strong>
+                    <p class="mb-1 text-dark">
+                      <strong>Montant payé :</strong>
+                      {{
+                        selectedOrder.amountPaid
+                          | currency: "EUR" : "symbol" : "1.2-2"
+                      }}
+                    </p>
+                    <p class="mb-0 text-dark">
+                      <strong>Transaction :</strong>
+                      {{ selectedOrder.stripe?.paymentId }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Étape 7: Email de 
+             
+               <div
+              class="workflow-step mb-4 p-3 border rounded shadow-sm position-relative"
+              *ngIf="
+                selectedOrder?.status === 'appointment_scheduled' ||
+                selectedOrder?.status === 'completed'
+              "
+            >
+              <div
+                class="step-indicator position-absolute top-0 start-0 h-100 bg-primary rounded-start"
+                style="width: 5px"
+              ></div>
+              <div class="ms-3">
+                <div class="d-flex align-items-center mb-3">
+                  <div
+                    class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                    style="width: 30px; height: 30px"
+                  >
+                    7
+                  </div>
+                  <h6 class="mb-0 text-dark">Confirmation Finale</h6>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                  <i class="bi bi-info-circle me-2"></i>
+                  <span *ngIf="!selectedOrder?.isDepositPaid">
+                    Envoyez un email de confirmation de rendez-vous au client.
+                  </span>
+                  <span *ngIf="selectedOrder?.isDepositPaid">
+                    Le dépôt a été payé. Envoyez un email récapitulatif de toute
+                    la procédure au client.
+                  </span>
+                </div>
+
+                <button
+                  class="btn btn-success"
+                  (click)="sendAppointmentEmail()"
+                  [disabled]="!selectedOrder?.appointmentDate"
+                >
+                  <i class="bi bi-envelope-check me-2"></i>
+                  <span *ngIf="!selectedOrder?.isDepositPaid">
+                    Envoyer Email de Confirmation du Rendez-vous
+                  </span>
+                  <span *ngIf="selectedOrder?.isDepositPaid">
+                    Envoyer Email Récapitulatif de la Procédure
+                  </span>
+                </button>
+              </div>
+            </div>
+            confirmation finale -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

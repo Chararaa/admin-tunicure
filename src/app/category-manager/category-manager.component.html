@@ -1,0 +1,1286 @@
+<div class="category-manager">
+  <!-- Header -->
+  <div class="category-header">
+    <div class="header-content">
+      <h1 class="category-title">📁 Gestion des Catégories</h1>
+      <p class="category-subtitle">
+        Gérez vos catégories de procédures médicales
+      </p>
+    </div>
+    <button class="add-btn" (click)="openAddPopup()">
+      <svg
+        class="add-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      Nouvelle Catégorie
+    </button>
+  </div>
+  <!-- Dans le header, après le bouton Ajouter -->
+  <div class="header-filters">
+    <div class="filter-group">
+      <label for="generalCategoryFilter" class="filter-label">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        Filtrer par catégorie générale:
+      </label>
+      <select
+        id="generalCategoryFilter"
+        class="filter-select"
+        (change)="filterByGeneralCategory($event)"
+      >
+        <option value="">Toutes les catégories</option>
+        <option value="unassigned">Non affectées</option>
+        <option *ngFor="let gc of generalCategories" [value]="gc._id">
+          {{ gc.name }} ({{ gc.subCategoriesCount || 0 }})
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Liste des catégories -->
+  <div class="category-grid">
+    <div
+      *ngFor="let category of categories"
+      class="category-card"
+      [class.inactive]="!category.isActive"
+    >
+      <div class="category-image-container">
+        <img
+          [src]="category.image || 'assets/images/category-default.jpg'"
+          [alt]="category.name"
+          class="category-image"
+          (error)="category.image = 'assets/images/category-default.jpg'"
+        />
+
+        <!-- Badge de statut -->
+        <div
+          class="status-badge"
+          [class.active]="category.isActive"
+          [class.inactive]="!category.isActive"
+        >
+          {{ category.isActive ? "🟢 Active" : "🔴 Inactive" }}
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="category-actions">
+          <button
+            class="action-btn edit-btn"
+            (click)="openEditPopup(category)"
+            title="Modifier"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+          <button
+            class="action-btn delete-btn"
+            (click)="openDeletePopup(category._id!)"
+            title="Supprimer"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Overlay d'infos -->
+        <div class="image-overlay">
+          <h3 class="category-name">{{ category.name }}</h3>
+          <p class="category-desc">
+            {{ category.description | slice: 0 : 100 }}...
+          </p>
+        </div>
+      </div>
+
+      <div class="card-content">
+        <!-- Badge de catégorie générale -->
+        <div class="general-category-badge" *ngIf="category.generalCategory">
+          <div class="general-category-info">
+            <span class="general-category-label">📂 Catégorie générale:</span>
+            <span class="general-category-name">
+              {{ getGeneralCategoryName(category) }}
+            </span>
+          </div>
+          <button
+            class="assign-btn"
+            (click)="openGeneralCategoryPopup(category)"
+            title="Changer la catégorie générale"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 5l6 6m0 0l6-6m-6 6v12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Informations principales -->
+        <div class="details-grid">
+          <div class="detail-item">
+            <span class="detail-label">⏱️ Durée:</span>
+            <span class="detail-value">{{ category.averageDuration }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">🔄 Récupération:</span>
+            <span class="detail-value">{{ category.recoveryTime }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">💰 Prix:</span>
+            <span class="detail-value">
+              {{ category.priceRange.min | number }} -
+              {{ category.priceRange.max | number }}
+              {{ category.priceRange.currency }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">📊 Ordre:</span>
+            <span class="detail-value">#{{ category.displayOrder }}</span>
+          </div>
+        </div>
+
+        <!-- Mots-clés -->
+        <div class="keywords-container" *ngIf="category.keywords?.length">
+          <div class="keywords-title">Mots-clés:</div>
+          <div class="keywords-list">
+            <span
+              *ngFor="let keyword of category.keywords.slice(0, 3)"
+              class="keyword-tag"
+            >
+              {{ keyword }}
+            </span>
+            <span *ngIf="category.keywords.length > 3" class="keyword-tag more">
+              +{{ category.keywords.length - 3 }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer">
+          <div class="footer-info">
+            <small class="created-date">
+              Créé le {{ category.createdAt | date: "dd/MM/yyyy" }}
+            </small>
+          </div>
+          <button
+            class="view-details-btn"
+            (click)="viewCategoryDetails(category._id!)"
+          >
+            Voir détails →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message si aucune catégorie -->
+  <div *ngIf="categories.length === 0" class="empty-state">
+    <div class="empty-icon">📂</div>
+    <h3>Aucune catégorie trouvée</h3>
+    <p>Commencez par créer votre première catégorie</p>
+    <button class="add-btn" (click)="openAddPopup()">
+      Créer une Catégorie
+    </button>
+  </div>
+
+  <!-- Popup Gestion Catégorie Générale -->
+  <div
+    *ngIf="showGeneralCategoryPopup && selectedCategory"
+    class="popup-overlay"
+    (click)="showGeneralCategoryPopup = false"
+  >
+    <div
+      class="popup-container assign-popup"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="popup-header">
+        <div>
+          <h2 class="popup-title">📁 Affecter à une Catégorie Générale</h2>
+          <p class="popup-subtitle">
+            Sélectionnez la catégorie générale pour "{{
+              selectedCategory.name
+            }}"
+          </p>
+        </div>
+        <button
+          class="close-btn"
+          (click)="showGeneralCategoryPopup = false"
+          title="Fermer"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="assign-content">
+        <div
+          class="current-assignment"
+          *ngIf="selectedCategory.generalCategory"
+        >
+          <span class="current-label">Actuellement affectée à:</span>
+          <span class="current-value">{{
+            getGeneralCategoryName(selectedCategory)
+          }}</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Sélectionner une catégorie générale:</label>
+          <select [(ngModel)]="selectedGeneralCategory" class="form-control">
+            <option value="">Aucune (retirer l'affectation)</option>
+            <option
+              *ngFor="let gc of generalCategories"
+              [value]="gc._id"
+              [disabled]="!gc.isActive"
+            >
+              {{ gc.name }}
+              <span *ngIf="!gc.isActive">(Inactive)</span>
+            </option>
+          </select>
+        </div>
+
+        <div class="assign-actions">
+          <button class="cancel-btn" (click)="showGeneralCategoryPopup = false">
+            Annuler
+          </button>
+          <button class="submit-btn" (click)="applyGeneralCategory()">
+            Appliquer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Ajouter/Modifier -->
+  <div
+    *ngIf="showAddPopup || showEditPopup"
+    class="popup-overlay"
+    (click)="closePopups()"
+  >
+    <div class="popup-container" (click)="$event.stopPropagation()">
+      <div class="popup-header">
+        <div>
+          <h2 class="popup-title">
+            {{
+              showAddPopup
+                ? "➕ Ajouter une Catégorie"
+                : "✏️ Modifier la Catégorie"
+            }}
+          </h2>
+          <p class="popup-subtitle">
+            {{
+              showAddPopup
+                ? "Remplissez les informations pour créer une nouvelle catégorie"
+                : "Modifiez les informations de la catégorie"
+            }}
+          </p>
+        </div>
+        <button class="close-btn" (click)="closePopups()" title="Fermer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <form (ngSubmit)="saveCategory(showEditPopup)" class="form-content">
+        <!-- Section 1: Informations de base -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">1</span>
+            Informations Générales
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                Nom de la catégorie *
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="currentCategory.name"
+                name="name"
+                required
+                placeholder="Ex: Chirurgie Esthétique"
+                class="form-control"
+              />
+              <div class="form-hint">3 à 100 caractères</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                Ordre d'affichage
+              </label>
+              <input
+                type="number"
+                [(ngModel)]="currentCategory.displayOrder"
+                name="displayOrder"
+                min="0"
+                class="form-control"
+              />
+              <div class="form-hint">0 = premier</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M13 16h-1v-4h1m0 0h-1m1 0v4m-6-8h2m6 0h2m-6 0V8m6 4v4m-8-4v4m0-4V8"
+                />
+              </svg>
+              Description *
+            </label>
+            <textarea
+              [(ngModel)]="currentCategory.description"
+              name="description"
+              rows="4"
+              required
+              placeholder="Décrivez en détail cette catégorie de procédure médicale..."
+              class="form-control"
+            ></textarea>
+            <div class="char-counter">
+              {{ (currentCategory.description || "").length }}/20000
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Images -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">2</span>
+            Images
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Image Principale
+              </label>
+              <div class="upload-zone" (click)="imageUpload.click()">
+                <input
+                  #imageUpload
+                  type="file"
+                  accept="image/*"
+                  (change)="onImageSelected($event)"
+                  class="hidden"
+                />
+                <div *ngIf="!currentCategory.image">
+                  <div class="upload-icon">📷</div>
+                  <p class="upload-text">Cliquez pour uploader une image</p>
+                  <small class="upload-hint">JPG, PNG, max 5MB</small>
+                </div>
+                <div *ngIf="currentCategory.image" class="image-preview">
+                  <img
+                    [src]="currentCategory.image"
+                    alt="Preview"
+                    class="preview-image"
+                  />
+                  <button
+                    type="button"
+                    class="remove-image-btn"
+                    (click)="
+                      currentCategory.image = ''; $event.stopPropagation()
+                    "
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                Bannière
+              </label>
+              <div class="upload-zone" (click)="bannerUpload.click()">
+                <input
+                  #bannerUpload
+                  type="file"
+                  accept="image/*"
+                  (change)="onBannerSelected($event)"
+                  class="hidden"
+                />
+                <div *ngIf="!currentCategory.banner">
+                  <div class="upload-icon">🖼️</div>
+                  <p class="upload-text">Cliquez pour uploader une bannière</p>
+                  <small class="upload-hint">Format large recommandé</small>
+                </div>
+                <div *ngIf="currentCategory.banner" class="image-preview">
+                  <img
+                    [src]="currentCategory.banner"
+                    alt="Preview"
+                    class="preview-image"
+                  />
+                  <button
+                    type="button"
+                    class="remove-image-btn"
+                    (click)="
+                      currentCategory.banner = ''; $event.stopPropagation()
+                    "
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Détails techniques -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">3</span>
+            Détails Techniques
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Durée moyenne *
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="currentCategory.averageDuration"
+                name="averageDuration"
+                required
+                placeholder="Ex: 2 heures"
+                class="form-control"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>
+                Temps de récupération *
+              </label>
+              <input
+                type="text"
+                [(ngModel)]="currentCategory.recoveryTime"
+                name="recoveryTime"
+                required
+                placeholder="Ex: 1 semaine"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Prix -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">4</span>
+            Fourchette de Prix
+          </h3>
+          <div class="price-grid">
+            <div class="form-group">
+              <label class="form-label required">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Prix Minimum *
+              </label>
+              <div class="price-input">
+                <input
+                  type="number"
+                  [(ngModel)]="currentCategory.priceRange.min"
+                  name="priceMin"
+                  required
+                  min="0"
+                  class="form-control"
+                />
+                <span class="currency">{{
+                  currentCategory.priceRange.currency
+                }}</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Prix Maximum *
+              </label>
+              <div class="price-input">
+                <input
+                  type="number"
+                  [(ngModel)]="currentCategory.priceRange.max"
+                  name="priceMax"
+                  required
+                  min="0"
+                  class="form-control"
+                />
+                <span class="currency">{{
+                  currentCategory.priceRange.currency
+                }}</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+                Devise
+              </label>
+              <select
+                [(ngModel)]="currentCategory.priceRange.currency"
+                name="currency"
+                class="form-control"
+              >
+                <option value="EUR">€ EUR</option>
+                <option value="USD">$ USD</option>
+                <option value="GBP">£ GBP</option>
+                <option value="MAD">MAD</option>
+                <option value="CAD">$ CAD</option>
+                <option value="AUD">$ AUD</option>
+              </select>
+            </div>
+          </div>
+          <div
+            class="price-range-display"
+            *ngIf="
+              currentCategory.priceRange.min && currentCategory.priceRange.max
+            "
+          >
+            Fourchette: {{ currentCategory.priceRange.min | number }} -
+            {{ currentCategory.priceRange.max | number }}
+            {{ currentCategory.priceRange.currency }}
+          </div>
+        </div>
+
+        <!-- Section 5: Mots-clés -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">5</span>
+            Mots-clés
+          </h3>
+          <div class="keywords-form">
+            <div class="keywords-input-container">
+              <input
+                type="text"
+                #keywordInput
+                placeholder="Ajouter un mot-clé (ex: chirurgie, esthétique, laser)"
+                class="keyword-input"
+                (keyup.enter)="addKeyword()"
+              />
+              <button
+                type="button"
+                class="add-keyword-btn"
+                (click)="addKeyword()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div class="keywords-tags" *ngIf="currentCategory.keywords.length">
+              <div
+                *ngFor="let keyword of currentCategory.keywords; let i = index"
+                class="keyword-tag-form"
+              >
+                {{ keyword }}
+                <button
+                  type="button"
+                  class="remove-keyword-btn"
+                  (click)="removeKeyword(i)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="keywords-hint">
+              Appuyez sur Entrée ou cliquez sur + pour ajouter
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 6: Statut -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">6</span>
+            Statut
+          </h3>
+          <div class="status-toggle">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="currentCategory.isActive"
+                name="isActive"
+                class="toggle-input"
+              />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">
+                {{
+                  currentCategory.isActive
+                    ? "🟢 Catégorie Active"
+                    : "🔴 Catégorie Inactive"
+                }}
+              </span>
+            </label>
+            <div class="status-hint">
+              {{
+                currentCategory.isActive
+                  ? "La catégorie est visible pour les utilisateurs"
+                  : "La catégorie est masquée"
+              }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 7: Catégorie Générale -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">7</span>
+            Catégorie Générale
+          </h3>
+          <div class="form-group">
+            <label class="form-label">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                />
+              </svg>
+              Catégorie parente
+            </label>
+
+            <div class="general-category-selector">
+              <select
+                [(ngModel)]="currentCategory.generalCategory"
+                name="generalCategory"
+                class="form-control"
+              >
+                <option [ngValue]="undefined">
+                  Aucune (catégorie indépendante)
+                </option>
+                <option *ngFor="let gc of generalCategories" [ngValue]="gc._id">
+                  {{ gc.name }}
+                  <span *ngIf="!gc.isActive" class="inactive-badge"
+                    >(Inactive)</span
+                  >
+                </option>
+              </select>
+
+              <!-- Lien pour créer une nouvelle catégorie générale -->
+              <div class="create-general-link">
+                <a
+                  href="/general-categories"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Créer une nouvelle catégorie générale
+                </a>
+              </div>
+            </div>
+
+            <div class="form-hint">
+              Sélectionnez une catégorie générale pour organiser vos catégories
+            </div>
+
+            <!-- Afficher l'info si une catégorie générale est sélectionnée -->
+            <div
+              *ngIf="
+                currentCategory.generalCategory && getSelectedGeneralCategory()
+              "
+              class="selected-general-info"
+            >
+              <div class="selected-general-card">
+                <div class="selected-general-image">
+                  <img
+                    [src]="
+                      getSelectedGeneralCategory()?.banner ||
+                      'assets/images/default-banner.jpg'
+                    "
+                    alt="Bannière"
+                  />
+                </div>
+                <div class="selected-general-details">
+                  <strong>{{ getSelectedGeneralCategory()?.name }}</strong>
+                  <p class="description">
+                    {{
+                      getSelectedGeneralCategory()?.description
+                        | slice: 0 : 100
+                    }}...
+                  </p>
+                  <span class="sub-count">
+                    {{ getSelectedGeneralCategory()?.subCategoriesCount || 0 }}
+                    sous-catégorie(s)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="closePopups()">
+            Annuler
+          </button>
+          <button type="submit" class="submit-btn" [disabled]="!isFormValid()">
+            {{ showAddPopup ? "Créer la Catégorie" : "Mettre à Jour" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup Confirmation Suppression -->
+  <div
+    *ngIf="deleteCategoryId"
+    class="popup-overlay"
+    (click)="deleteCategoryId = null"
+  >
+    <div
+      class="delete-popup popup-container"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="delete-icon">⚠️</div>
+      <h3 class="delete-title">Confirmer la suppression</h3>
+      <p class="delete-message">
+        Êtes-vous sûr de vouloir supprimer cette catégorie ?<br />
+        Cette action est irréversible et affectera toutes les procédures
+        associées.
+      </p>
+      <div class="delete-actions">
+        <button class="delete-cancel-btn" (click)="deleteCategoryId = null">
+          Annuler
+        </button>
+        <button class="delete-confirm-btn" (click)="confirmDelete()">
+          Oui, supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Détails Catégorie -->
+  <div
+    *ngIf="showDetailsPopup && selectedCategory"
+    class="popup-overlay"
+    (click)="closeDetailsPopup()"
+  >
+    <div
+      class="popup-container details-popup"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="popup-header">
+        <div class="header-content">
+          <h2 class="popup-title">📋 Détails de la Catégorie</h2>
+          <p class="popup-subtitle">{{ selectedCategory.name }}</p>
+        </div>
+        <button class="close-btn" (click)="closeDetailsPopup()" title="Fermer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="details-content">
+        <!-- Section Image et Statut -->
+        <div class="details-section image-section">
+          <div class="category-image-large">
+            <img
+              [src]="
+                selectedCategory.image || 'assets/images/category-default.jpg'
+              "
+              [alt]="selectedCategory.name"
+              class="main-image"
+            />
+            <div *ngIf="selectedCategory.banner" class="banner-image">
+              <img [src]="selectedCategory.banner" alt="Bannière" />
+            </div>
+          </div>
+          <div class="status-info">
+            <span
+              class="status-badge"
+              [class.active]="selectedCategory.isActive"
+              [class.inactive]="!selectedCategory.isActive"
+            >
+              {{ selectedCategory.isActive ? "🟢 Active" : "🔴 Inactive" }}
+            </span>
+            <div class="order-info">
+              <strong>Ordre d'affichage:</strong> #{{
+                selectedCategory.displayOrder
+              }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Informations -->
+        <div class="details-section">
+          <h3 class="section-title">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13 16h-1v-4h1m0 0h-1m1 0v4m-6-8h2m6 0h2m-6 0V8m6 4v4m-8-4v4m0-4V8"
+              />
+            </svg>
+            Description
+          </h3>
+          <div class="description-text">
+            {{ selectedCategory.description }}
+          </div>
+        </div>
+
+        <!-- Section Détails Techniques -->
+        <div class="details-section">
+          <h3 class="section-title">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+              />
+            </svg>
+            Détails Techniques
+          </h3>
+          <div class="details-grid">
+            <div class="detail-row">
+              <span class="detail-label">⏱️ Durée moyenne:</span>
+              <span class="detail-value">{{
+                selectedCategory.averageDuration
+              }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">🔄 Temps de récupération:</span>
+              <span class="detail-value">{{
+                selectedCategory.recoveryTime
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Prix -->
+        <div class="details-section">
+          <h3 class="section-title">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Fourchette de Prix
+          </h3>
+          <div class="price-details">
+            <div class="price-range">
+              <span class="price-min">{{
+                selectedCategory.priceRange.min | number
+              }}</span>
+              <span class="price-separator">à</span>
+              <span class="price-max">{{
+                selectedCategory.priceRange.max | number
+              }}</span>
+              <span class="price-currency">{{
+                selectedCategory.priceRange.currency
+              }}</span>
+            </div>
+            <div class="price-avg">
+              Prix moyen:
+              {{
+                (selectedCategory.priceRange.min +
+                  selectedCategory.priceRange.max) /
+                  2 | number
+              }}
+              {{ selectedCategory.priceRange.currency }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: Mots-clés -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">5</span>
+            Mots-clés
+          </h3>
+          <div class="keywords-form">
+            <div class="keywords-input-container">
+              <input type="text" [(ngModel)]="keywordInputValue" />
+              <button
+                type="button"
+                class="add-keyword-btn"
+                (click)="addKeyword()"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div class="keywords-tags" *ngIf="currentCategory.keywords.length">
+              <div
+                *ngFor="let keyword of currentCategory.keywords; let i = index"
+                class="keyword-tag-form"
+              >
+                {{ keyword }}
+                <button
+                  type="button"
+                  class="remove-keyword-btn"
+                  (click)="removeKeyword(i)"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="keywords-hint">
+              Appuyez sur Entrée ou cliquez sur + pour ajouter
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Métadonnées -->
+        <div class="details-section metadata">
+          <div class="metadata-grid">
+            <div class="metadata-item">
+              <span class="metadata-label">Créé le:</span>
+              <span class="metadata-value">{{
+                selectedCategory.createdAt | date: "dd/MM/yyyy à HH:mm"
+              }}</span>
+            </div>
+            <div class="metadata-item">
+              <span class="metadata-label">Dernière modification:</span>
+              <span class="metadata-value">{{
+                selectedCategory.updatedAt | date: "dd/MM/yyyy à HH:mm"
+              }}</span>
+            </div>
+            <div *ngIf="selectedCategory.slug" class="metadata-item">
+              <span class="metadata-label">Slug:</span>
+              <span class="metadata-value">{{ selectedCategory.slug }}</span>
+            </div>
+            <div *ngIf="selectedCategory.metaTitle" class="metadata-item">
+              <span class="metadata-label">Titre SEO:</span>
+              <span class="metadata-value">{{
+                selectedCategory.metaTitle
+              }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="details-actions">
+          <button
+            class="edit-btn-large"
+            (click)="openEditPopup(selectedCategory); closeDetailsPopup()"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            Modifier
+          </button>
+          <button
+            class="delete-btn-large"
+            (click)="
+              openDeletePopup(selectedCategory._id!); closeDetailsPopup()
+            "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            Supprimer
+          </button>
+          <button class="close-details-btn" (click)="closeDetailsPopup()">
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>Chargement des catégories...</p>
+  </div>
+</div>

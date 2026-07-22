@@ -1,0 +1,266 @@
+<!-- Header -->
+<div class="row">
+  <div class="col-12">
+    <div
+      class="page-title-box d-flex align-items-center justify-content-between"
+    >
+      <h4 class="mb-0">Gestion des Employés</h4>
+      <div>
+        <a class="btn btn-primary" routerLink="/employees/register">
+          <i class="fas fa-plus me-1"></i>
+          Nouvel Employé
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+<br />
+<!-- Filters -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Rechercher par nom, email ou poste..."
+      [(ngModel)]="searchTerm"
+      (input)="filterEmployees()"
+    />
+  </div>
+  <div class="col-md-3">
+    <select
+      class="form-select"
+      [(ngModel)]="selectedPoste"
+      (change)="filterEmployees()"
+    >
+      <option value="all">Tous les postes</option>
+      <option *ngFor="let poste of postes" [value]="poste">
+        {{ getPosteDisplayName(poste) }}
+      </option>
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select
+      class="form-select"
+      [(ngModel)]="selectedRole"
+      (change)="filterEmployees()"
+    >
+      <option value="all">Tous les rôles</option>
+      <option *ngFor="let role of roles" [value]="role.value">
+        {{ role.label }}
+      </option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <span class="badge bg-primary">
+      {{ filteredEmployees.length }} employé(s)
+    </span>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="isLoading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Chargement...</span>
+  </div>
+</div>
+
+<!-- Employees Grid -->
+<div *ngIf="!isLoading" class="row">
+  <div class="col-12">
+    <div class="row">
+      <div
+        class="col-md-6 col-lg-4 mb-4"
+        *ngFor="let employee of filteredEmployees"
+      >
+        <div class="card employee-card h-100">
+          <div class="card-body">
+            <!-- Header avec photo et info -->
+            <div class="d-flex align-items-start mb-3">
+              <div class="me-3">
+                <img
+                  [src]="getEmployeeImage(employee)"
+                  alt="{{ employee.personalInfo.name }}"
+                  class="rounded-circle"
+                  style="width: 60px; height: 60px; object-fit: cover"
+                  onerror="this.src='assets/images/profile/user-1.jpg'"
+                />
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="card-title mb-1">
+                  {{ employee.personalInfo.name }}
+                </h5>
+                <span
+                  class="badge mb-1"
+                  [ngClass]="
+                    getPosteBadgeClass(employee.professionalInfo.poste)
+                  "
+                >
+                  {{ getPosteDisplayName(employee.professionalInfo.poste) }}
+                </span>
+                <br />
+                <span
+                  class="badge"
+                  [ngClass]="getRoleBadgeClass(employee.user.role)"
+                >
+                  {{ getRoleDisplayName(employee.user.role) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Informations de contact -->
+            <div class="employee-info mb-3">
+              <p class="mb-1">
+                <i class="fas fa-envelope me-2 text-muted"></i>
+                <small>{{ employee.personalInfo.email }}</small>
+              </p>
+              <p class="mb-1">
+                <i class="fas fa-phone me-2 text-muted"></i>
+                <small>{{ employee.personalInfo.phone }}</small>
+              </p>
+              <p class="mb-0">
+                <i class="fas fa-calendar me-2 text-muted"></i>
+                <small
+                  >Embauché le
+                  {{
+                    employee.professionalInfo.hireDate | date : "dd/MM/yyyy"
+                  }}</small
+                >
+              </p>
+            </div>
+
+            <!-- Compétences -->
+            <div
+              class="mb-3"
+              *ngIf="employee.professionalInfo.skills.length > 0"
+            >
+              <small class="text-muted">Compétences:</small>
+              <div>
+                <span
+                  *ngFor="let skill of employee.professionalInfo.skills"
+                  class="badge bg-light text-dark me-1 mb-1"
+                  style="font-size: 0.7rem"
+                >
+                  {{ skill }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <div class="mb-3" *ngIf="employee.professionalInfo.bio">
+              <small class="text-muted">Bio:</small>
+              <p class="mb-0" style="font-size: 0.85rem">
+                {{ employee.professionalInfo.bio | slice : 0 : 100 }}
+                {{ employee.professionalInfo.bio.length > 100 ? "..." : "" }}
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2">
+              <button
+                class="btn btn-outline-primary btn-sm flex-fill"
+                (click)="selectEmployeeForRole(employee)"
+                data-bs-toggle="modal"
+                data-bs-target="#roleModal"
+              >
+                <i class="fas fa-user-cog me-1"></i>
+                Rôle
+              </button>
+              <button
+                class="btn btn-outline-danger btn-sm"
+                (click)="deleteEmployee(employee)"
+              >
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredEmployees.length === 0" class="text-center py-5">
+      <i class="fas fa-users fa-3x text-muted mb-3"></i>
+      <p class="text-muted">Aucun employé trouvé</p>
+      <a class="btn btn-primary" routerLink="/employees/register">
+        <i class="fas fa-plus me-1"></i>
+        Ajouter le premier employé
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Role Update Modal -->
+<div
+  class="modal fade"
+  id="roleModal"
+  tabindex="-1"
+  aria-hidden="true"
+  *ngIf="selectedEmployee"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modifier le rôle</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <p>
+            <strong>Employé:</strong> {{ selectedEmployee.personalInfo.name }}
+          </p>
+          <p>
+            <strong>Poste:</strong>
+            {{ getPosteDisplayName(selectedEmployee.professionalInfo.poste) }}
+          </p>
+          <p>
+            <strong>Rôle actuel:</strong>
+            <span
+              class="badge"
+              [ngClass]="getRoleBadgeClass(selectedEmployee.user.role)"
+            >
+              {{ getRoleDisplayName(selectedEmployee.user.role) }}
+            </span>
+          </p>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Nouveau rôle</label>
+          <select class="form-select" [(ngModel)]="newRole">
+            <option *ngFor="let role of roles" [value]="role.value">
+              {{ role.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>
+          Le rôle détermine les permissions d'accès dans l'application.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="updateEmployeeRole()"
+          [disabled]="
+            !newRole || newRole === selectedEmployee.user.role || isUpdatingRole
+          "
+        >
+          <span
+            *ngIf="isUpdatingRole"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
+          {{ isUpdatingRole ? "Mise à jour..." : "Mettre à jour" }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

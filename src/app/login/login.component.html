@@ -1,0 +1,192 @@
+<!-- Modern Login Page -->
+<div class="modern-login-container">
+  <!-- Background with gradient -->
+  <div class="login-background">
+    <div class="background-pattern"></div>
+    <div class="gradient-overlay"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="login-wrapper">
+    <!-- Left Panel with Welcome Message -->
+    <div class="login-left-panel">
+      <div class="left-content">
+        <div class="brand-section">
+          <img
+            src="assets/images/logos/logo.png"
+            alt="Medical Clinic"
+            class="brand-logo"
+          />
+          <p class="brand-subtitle">
+            Plateforme interne · Gestion des partenaires médicaux
+          </p>
+        </div>
+
+        <div class="welcome-section">
+          <h2>Bienvenue sur votre espace administrateur</h2>
+          <p class="welcome-text">
+            Cette plateforme vous permet de gérer efficacement les docteurs
+            partenaires, les rendez-vous patients, le calendrier médical ainsi
+            que les catégories et sous-catégories d’interventions.
+          </p>
+        </div>
+
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon">🏥</div>
+            <div class="feature-content">
+              <h4>Gestion complète</h4>
+              <p>Patients, rendez-vous, docteurs</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🔒</div>
+            <div class="feature-content">
+              <h4>Sécurité maximale</h4>
+              <p>Données médicales protégées</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">⚡</div>
+            <div class="feature-content">
+              <h4>Interface rapide</h4>
+              <p>Expérience utilisateur optimisée</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel with Login Form -->
+    <div class="login-right-panel">
+      <div class="right-content">
+        <div class="form-container">
+          <div class="form-header">
+            <h2 class="form-title">Connexion</h2>
+            <p class="form-subtitle">Accédez à votre compte administrateur</p>
+          </div>
+
+          <!-- Login Form -->
+          <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
+            <!-- Email Field -->
+            <div class="form-group">
+              <label for="email" class="form-label">
+                <span class="label-icon">📧</span>
+                Email professionnel
+              </label>
+              <div class="input-group">
+                <input
+                  type="email"
+                  id="email"
+                  class="form-input"
+                  [(ngModel)]="email"
+                  name="email"
+                  placeholder="admin@medicalclinic.com"
+                  required
+                  [disabled]="isLoading"
+                />
+                <div class="input-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+              <label for="password" class="form-label">
+                <span class="label-icon">🔒</span>
+                Mot de passe
+              </label>
+              <div class="input-group">
+                <input
+                  type="password"
+                  id="password"
+                  class="form-input"
+                  [(ngModel)]="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required
+                  [disabled]="isLoading"
+                />
+                <div class="input-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Remember Me & Forgot Password -->
+            <div class="form-options">
+              <label class="checkbox-container">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  [(ngModel)]="rememberMe"
+                  name="rememberMe"
+                  [disabled]="isLoading"
+                />
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-label">Se souvenir de moi</span>
+              </label>
+
+              <a href="#" class="forgot-password"> Mot de passe oublié ? </a>
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="errorMessage" class="error-message">
+              <div class="error-icon">⚠️</div>
+              <div class="error-text">{{ errorMessage }}</div>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="submit"
+              class="submit-btn"
+              [disabled]="isLoading || !email || !password"
+              [class.loading]="isLoading"
+            >
+              <span *ngIf="!isLoading" class="btn-content">
+                <span class="btn-icon">→</span>
+                Se connecter
+              </span>
+              <span *ngIf="isLoading" class="btn-content">
+                <span class="spinner"></span>
+                Connexion en cours...
+              </span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+          <p class="footer-text">
+            © 2026 TuniCure · Plateforme interne de gestion médicale
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

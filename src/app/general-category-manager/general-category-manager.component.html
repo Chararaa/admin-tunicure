@@ -1,0 +1,614 @@
+<div class="general-category-manager">
+  <!-- Header -->
+  <div class="category-header">
+    <div class="header-content">
+      <h1 class="category-title">📂 Gestion des Catégories Générales</h1>
+      <p class="category-subtitle">
+        Gérez vos catégories générales (parentes) pour organiser les
+        sous-catégories
+      </p>
+    </div>
+    <button class="add-btn" (click)="openAddPopup()">
+      <svg
+        class="add-icon"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      Nouvelle Catégorie Générale
+    </button>
+  </div>
+
+  <!-- Liste des catégories générales -->
+  <div class="category-grid">
+    <div *ngFor="let gc of generalCategories" class="general-category-card">
+      <div class="general-category-banner">
+        <img
+          [src]="gc.banner || 'assets/images/default-banner.jpg'"
+          [alt]="gc.name"
+        />
+        <div class="status-badge" [class.active]="gc.isActive">
+          {{ gc.isActive ? "🟢 Active" : "🔴 Inactive" }}
+        </div>
+      </div>
+
+      <div class="general-category-content">
+        <h3>{{ gc.name }}</h3>
+
+        <!-- Boutons 
+         <div class="stats">
+          <span class="stat">
+            <strong>Sous-catégories: {{ gc.subCategoriesCount || 0 }}</strong>
+          </span>
+          <span class="stat">
+            <strong>order :{{ gc.displayOrder }}</strong>
+          </span>
+        </div> 
+        d'action -->
+
+        <div class="actions">
+          <!-- Boutons
+             <button class="edit-btn" (click)="openEditPopup(gc)">Modifier</button>
+          <button class="delete-btn" (click)="openDeletePopup(gc._id!)">
+            Supprimer
+          </button> 
+          d'action -->
+
+          <button
+            class="toggle-btn"
+            [class.toggle-active]="gc.isActive"
+            [class.toggle-inactive]="!gc.isActive"
+            (click)="toggleStatus(gc._id!)"
+          >
+            <svg
+              *ngIf="gc.isActive"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              width="16"
+              height="16"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <svg
+              *ngIf="!gc.isActive"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              width="16"
+              height="16"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {{ gc.isActive ? "Désactiver" : "Activer" }}
+          </button>
+          <!-- Popup de confirmation de suppression -->
+          <div *ngIf="deleteGeneralCategoryId" class="popup-overlay">
+            <div class="delete-popup">
+              <h3>Confirmer la suppression</h3>
+              <p>
+                Êtes-vous sûr de vouloir supprimer cette catégorie générale ?
+              </p>
+              <div class="delete-actions">
+                <button (click)="deleteGeneralCategoryId = null">
+                  Annuler
+                </button>
+                <button (click)="confirmDelete()">Supprimer</button>
+              </div>
+            </div>
+          </div>
+          <button
+            class="view-btn"
+            (click)="viewGeneralCategoryDetails(gc._id!)"
+          >
+            Voir détails →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Après le .category-grid -->
+  <div *ngIf="deleteGeneralCategoryId" class="popup-overlay">
+    <div
+      class="delete-popup popup-container"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="delete-icon">⚠️</div>
+      <h3 class="delete-title">Confirmer la suppression</h3>
+      <p class="delete-message">
+        Êtes-vous sûr de vouloir supprimer cette catégorie générale ?<br />
+        Cette action est irréversible et affectera toutes les sous-catégories
+        associées.
+      </p>
+      <div class="delete-actions">
+        <button
+          class="delete-cancel-btn"
+          (click)="deleteGeneralCategoryId = null"
+        >
+          Annuler
+        </button>
+        <button class="delete-confirm-btn" (click)="confirmDelete()">
+          Oui, supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Ajouter/Modifier -->
+  <div
+    *ngIf="showAddPopup || showEditPopup"
+    class="popup-overlay"
+    (click)="closePopups()"
+  >
+    <div class="popup-container" (click)="$event.stopPropagation()">
+      <div class="popup-header">
+        <div>
+          <h2 class="popup-title">
+            {{
+              showAddPopup
+                ? "➕ Ajouter une Catégorie Générale"
+                : "✏️ Modifier la Catégorie Générale"
+            }}
+          </h2>
+          <p class="popup-subtitle">
+            {{
+              showAddPopup
+                ? "Remplissez les informations pour créer une nouvelle catégorie générale"
+                : "Modifiez les informations de la catégorie générale"
+            }}
+          </p>
+        </div>
+        <button class="close-btn" (click)="closePopups()" title="Fermer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <form
+        (ngSubmit)="saveGeneralCategory(showEditPopup)"
+        class="form-content"
+      >
+        <!-- Section 1: Informations de base -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">1</span>
+            Informations Générales
+          </h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="required">Nom *</label>
+              <input
+                type="text"
+                [(ngModel)]="currentGeneralCategory.name"
+                name="name"
+                required
+                placeholder="Ex: Chirurgies Esthétiques"
+                class="form-control"
+                minlength="3"
+                maxlength="100"
+              />
+              <div class="form-hint">3 à 100 caractères</div>
+            </div>
+
+            <div class="form-group">
+              <label>Ordre d'affichage</label>
+              <input
+                type="number"
+                [(ngModel)]="currentGeneralCategory.displayOrder"
+                name="displayOrder"
+                min="0"
+                class="form-control"
+              />
+              <div class="form-hint">0 = premier</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="required">Description *</label>
+            <textarea
+              [(ngModel)]="currentGeneralCategory.description"
+              name="description"
+              rows="4"
+              required
+              placeholder="Décrivez cette catégorie générale..."
+              class="form-control"
+              minlength="50"
+              maxlength="20000"
+            ></textarea>
+            <div class="char-counter">
+              {{ (currentGeneralCategory.description || "").length }}/20000
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Médias -->
+        <!-- Section 2: Médias -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">2</span>
+            Médias
+          </h3>
+
+          <div class="form-group">
+            <label class="required">Bannière *</label>
+            <div class="upload-zone" (click)="bannerUpload.click()">
+              <input
+                #bannerUpload
+                type="file"
+                accept="image/*"
+                (change)="onBannerSelected($event)"
+                class="hidden"
+              />
+              <div *ngIf="!currentGeneralCategory.banner">
+                <div class="upload-icon">🖼️</div>
+                <p class="upload-text">Cliquez pour uploader une bannière</p>
+                <small class="upload-hint"
+                  >Format large recommandé (1200x400px)</small
+                >
+              </div>
+              <div *ngIf="currentGeneralCategory.banner" class="banner-preview">
+                <img [src]="currentGeneralCategory.banner" alt="Preview" />
+                <button
+                  type="button"
+                  class="remove-preview"
+                  (click)="
+                    currentGeneralCategory.banner = ''; $event.stopPropagation()
+                  "
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section Vidéo (liens externes) -->
+          <div class="form-group">
+            <label>Vidéo (optionnel)</label>
+            <div class="video-input-group">
+              <input
+                type="text"
+                [(ngModel)]="currentGeneralCategory.video"
+                (input)="onVideoUrlChange(currentGeneralCategory.video)"
+                name="video"
+                placeholder="Collez un lien YouTube, Facebook, Instagram ou Vimeo"
+                class="form-control video-url-input"
+              />
+
+              <!-- Indicateur de plateforme -->
+              <div
+                *ngIf="currentGeneralCategory.videoType"
+                class="video-platform-badge"
+              >
+                <span [class]="'platform-' + currentGeneralCategory.videoType">
+                  {{ currentGeneralCategory.videoType | titlecase }}
+                </span>
+              </div>
+            </div>
+            <!-- Exemples
+             
+            
+             <div class="video-examples">
+              <small>Exemples de liens acceptés :</small>
+              <div class="example-links">
+                <span>YouTube: https://youtu.be/VIDEO_ID</span>
+                <span>Facebook: https://fb.watch/VIDEO_ID</span>
+                <span>Instagram: https://instagram.com/p/VIDEO_ID</span>
+                <span>Vimeo: https://vimeo.com/VIDEO_ID</span>
+              </div>
+            </div>
+
+            <div *ngIf="getVideoPreview()" class="video-preview-container">
+              <h4>Aperçu de la vidéo :</h4>
+              <div class="video-embed">
+                <iframe
+                  [src]="getVideoPreview()"
+                  frameborder="0"
+                  allow="
+                    accelerometer;
+                    autoplay;
+                    clipboard-write;
+                    encrypted-media;
+                    gyroscope;
+                    picture-in-picture;
+                  "
+                  allowfullscreen
+                  width="100%"
+                  height="250"
+                ></iframe>
+              </div>
+            </div>
+            
+            de liens -->
+          </div>
+
+          <!-- Icône (reste identique) -->
+          <div class="form-group">
+            <label>Icône (optionnel)</label>
+            <div class="upload-zone" (click)="iconUpload.click()">
+              <input
+                #iconUpload
+                type="file"
+                accept="image/*"
+                (change)="onIconSelected($event)"
+                class="hidden"
+              />
+              <div *ngIf="!currentGeneralCategory.icon">
+                <div class="upload-icon">📱</div>
+                <p class="upload-text">Cliquez pour uploader une icône</p>
+                <small class="upload-hint">Carré, 100x100px minimum</small>
+              </div>
+              <div *ngIf="currentGeneralCategory.icon" class="icon-preview">
+                <img [src]="currentGeneralCategory.icon" alt="Preview" />
+                <button
+                  type="button"
+                  class="remove-preview"
+                  (click)="
+                    currentGeneralCategory.icon = ''; $event.stopPropagation()
+                  "
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Statut -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <span class="section-number">3</span>
+            Statut
+          </h3>
+          <div class="status-toggle">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="currentGeneralCategory.isActive"
+                name="isActive"
+                class="toggle-input"
+              />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text">
+                {{
+                  currentGeneralCategory.isActive
+                    ? "🟢 Catégorie Active"
+                    : "🔴 Catégorie Inactive"
+                }}
+              </span>
+            </label>
+            <div class="form-hint">
+              {{
+                currentGeneralCategory.isActive
+                  ? "La catégorie générale est visible"
+                  : "La catégorie générale est masquée"
+              }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="closePopups()">
+            Annuler
+          </button>
+          <button type="submit" class="submit-btn" [disabled]="!isFormValid()">
+            {{ showAddPopup ? "Créer la Catégorie" : "Mettre à Jour" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup Détails Catégorie Générale -->
+  <div
+    *ngIf="showDetailsPopup && selectedGeneralCategory"
+    class="popup-overlay"
+    (click)="closeDetailsPopup()"
+  >
+    <div
+      class="popup-container details-popup"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="popup-header">
+        <div class="header-content">
+          <h2 class="popup-title">📂 Détails de la Catégorie Générale</h2>
+          <p class="popup-subtitle">{{ selectedGeneralCategory.name }}</p>
+        </div>
+        <button class="close-btn" (click)="closeDetailsPopup()" title="Fermer">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="details-content">
+        <!-- Section Bannière et Statut -->
+        <div class="details-section image-section">
+          <div class="category-banner-large">
+            <img
+              [src]="
+                selectedGeneralCategory.banner ||
+                'assets/images/default-banner.jpg'
+              "
+              [alt]="selectedGeneralCategory.name"
+              class="main-banner"
+            />
+          </div>
+          <div class="status-info">
+            <span
+              class="status-badge"
+              [class.active]="selectedGeneralCategory.isActive"
+            >
+              {{
+                selectedGeneralCategory.isActive ? "🟢 Active" : "🔴 Inactive"
+              }}
+            </span>
+            <div class="order-info">
+              <strong>Ordre d'affichage:</strong> #{{
+                selectedGeneralCategory.displayOrder
+              }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Description -->
+        <div class="details-section">
+          <h3 class="section-title">Description</h3>
+          <div class="description-text">
+            {{ selectedGeneralCategory.description }}
+          </div>
+        </div>
+
+        <!-- Section Statistiques -->
+        <div class="details-section">
+          <h3 class="section-title">Statistiques</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">Sous-catégories:</span>
+              <span class="stat-value">{{
+                selectedGeneralCategory.subCategoriesCount || 0
+              }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Statut:</span>
+              <span class="stat-value">
+                {{ selectedGeneralCategory.isActive ? "Active" : "Inactive" }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Vidéo
+         
+            <div *ngIf="selectedGeneralCategory.video" class="details-section">
+          <h3 class="section-title">Vidéo</h3>
+          <div class="video-preview">
+            <div *ngIf="getVideoPreview()" class="video-embed">
+              <iframe
+                [src]="getVideoPreview()"
+                frameborder="0"
+                allow="
+                  accelerometer;
+                  autoplay;
+                  clipboard-write;
+                  encrypted-media;
+                  gyroscope;
+                  picture-in-picture;
+                "
+                allowfullscreen
+                width="100%"
+                height="250"
+              >
+              </iframe>
+            </div>
+            <div *ngIf="!getVideoPreview()" class="video-link">
+              <a
+                [href]="selectedGeneralCategory.video"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Voir la vidéo
+              </a>
+            </div>
+          </div>
+        </div>
+        (si existante) -->
+
+        <!-- Section Sous-catégories -->
+        <div
+          *ngIf="
+            selectedGeneralCategory.subCategories &&
+            selectedGeneralCategory.subCategories.length > 0
+          "
+          class="details-section"
+        >
+          <h3 class="section-title">
+            Sous-catégories associées ({{
+              selectedGeneralCategory.subCategories.length
+            }})
+          </h3>
+          <div class="subcategories-list">
+            <div
+              *ngFor="let subCat of selectedGeneralCategory.subCategories"
+              class="subcategory-item"
+            >
+              <span class="subcategory-name">{{ subCat.name }}</span>
+              <span class="subcategory-status" [class.active]="subCat.isActive">
+                {{ subCat.isActive ? "🟢" : "🔴" }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="details-actions">
+          <button
+            class="edit-btn-large"
+            (click)="
+              openEditPopup(selectedGeneralCategory); closeDetailsPopup()
+            "
+          >
+            Modifier
+          </button>
+          <button
+            class="delete-btn-large"
+            (click)="
+              openDeletePopup(selectedGeneralCategory._id!); closeDetailsPopup()
+            "
+          >
+            Supprimer
+          </button>
+          <button class="close-details-btn" (click)="closeDetailsPopup()">
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>Chargement des catégories...</p>
+  </div>
+</div>

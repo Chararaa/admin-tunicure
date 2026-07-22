@@ -1,0 +1,637 @@
+<div class="row">
+  <div class="col-12">
+    <div
+      class="page-title-box d-flex align-items-center justify-content-between"
+    >
+      <h4 class="mb-0">📅 Calendrier des Rendez-vous & Arrivées</h4>
+    </div>
+  </div>
+</div>
+
+<!-- Filtres -->
+<div class="row mb-3">
+  <div class="col-md-4">
+    <label class="form-label">Filtrer par docteur</label>
+    <select
+      class="form-select"
+      [(ngModel)]="selectedDoctor"
+      (change)="onFilterChange()"
+    >
+      <option value="all">Tous les docteurs</option>
+      <option *ngFor="let doctor of doctors" [value]="doctor.personalInfo.name">
+        Dr. {{ doctor.personalInfo.name }}
+      </option>
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Type d'événement</label>
+    <select
+      class="form-select"
+      [(ngModel)]="selectedEventType"
+      (change)="onEventTypeChange()"
+    >
+      <option value="all">Tous les événements</option>
+      <option value="appointment">Rendez-vous seulement</option>
+      <option value="arrival">Dates d'arrivée seulement</option>
+    </select>
+  </div>
+  <div class="col-md-4">
+    <label class="form-label">Actions</label>
+    <div class="d-flex align-items-center justify-content-end gap-2">
+      <span class="badge bg-primary">{{ calendarEvents.length }} RDV(s)</span>
+      <span class="badge bg-success">{{ arrivalDates.length }} Arrivée(s)</span>
+      <button class="btn btn-success btn-sm" (click)="refreshCalendar()">
+        <i class="fas fa-sync-alt"></i> Actualiser
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Légende -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body py-2">
+        <h6 class="card-title mb-2">Légende des Événements</h6>
+        <div class="d-flex flex-wrap gap-3">
+          <!-- Légende rendez-vous -->
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-primary me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>RDV Programmé</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-success me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>RDV Confirmé</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-dark me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>RDV Terminé</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-danger me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>RDV Annulé</small>
+          </div>
+
+          <!-- Légende dates d'arrivée -->
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-success me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>Arrivée (>7j)</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-warning me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>Arrivée (1-7j)</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-danger me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>Arrivée (≤3j)</small>
+          </div>
+          <div class="d-flex align-items-center">
+            <div
+              class="legend-color bg-secondary me-2"
+              style="width: 15px; height: 15px"
+            ></div>
+            <small>Arrivée passée</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div *ngIf="isLoading" class="text-center py-5">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Chargement...</span>
+  </div>
+  <p class="mt-2">Chargement des événements...</p>
+</div>
+
+<!-- Calendar -->
+<div *ngIf="!isLoading" class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">
+        <full-calendar
+          #calendar
+          [options]="calendarOptions"
+          class="custom-calendar"
+        ></full-calendar>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Order ID -->
+<div *ngIf="selectedOrderId" class="alert alert-info mt-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <strong>📅 Création de rendez-vous</strong>
+      <p class="mb-0">
+        Vous êtes en train de créer un rendez-vous pour la commande
+        sélectionnée.
+      </p>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary" (click)="clearSelection()">
+      Annuler
+    </button>
+  </div>
+</div>
+
+<!-- Modal Détails Date d'Arrivée -->
+<div
+  class="modal fade"
+  id="arrivalDateModal"
+  tabindex="-1"
+  aria-hidden="true"
+  *ngIf="selectedArrivalDate"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title">🛬 Date d'Arrivée du Client</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          (click)="closeModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Client</label>
+              <p class="mb-0">
+                {{ selectedArrivalDate.extendedProps.clientName }}
+              </p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Email</label>
+              <p class="mb-0">
+                {{ selectedArrivalDate.extendedProps.clientEmail }}
+              </p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Téléphone</label>
+              <p class="mb-0">
+                {{ selectedArrivalDate.extendedProps.clientPhone }}
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Date d'arrivée</label>
+              <p class="mb-0">
+                <i class="fas fa-calendar-day text-primary"></i>
+                {{ selectedArrivalDate.start | date: "dd/MM/yyyy" }}
+              </p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Procédure</label>
+              <p class="mb-0">
+                {{ selectedArrivalDate.extendedProps.category }}
+              </p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Statut commande</label>
+              <p class="mb-0">
+                <span
+                  class="badge"
+                  [ngClass]="
+                    getStatusBadgeClass(
+                      selectedArrivalDate.extendedProps.status
+                    )
+                  "
+                >
+                  {{ getStatusText(selectedArrivalDate.extendedProps.status) }}
+                </span>
+              </p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Jours restants</label>
+              <p class="mb-0">
+                <span
+                  class="badge"
+                  [ngClass]="{
+                    'bg-danger':
+                      getDaysUntilArrival(selectedArrivalDate.start) <= 3,
+                    'bg-warning':
+                      getDaysUntilArrival(selectedArrivalDate.start) > 3 &&
+                      getDaysUntilArrival(selectedArrivalDate.start) <= 7,
+                    'bg-success':
+                      getDaysUntilArrival(selectedArrivalDate.start) > 7,
+                    'bg-secondary':
+                      getDaysUntilArrival(selectedArrivalDate.start) < 0,
+                  }"
+                >
+                  <i class="fas fa-clock me-1"></i>
+                  {{ getDaysUntilArrival(selectedArrivalDate.start) }} jour(s)
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alerte si arrivée imminente -->
+        <div
+          *ngIf="selectedArrivalDate.extendedProps.isUpcoming"
+          class="alert alert-warning mt-3"
+        >
+          <div class="d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>
+              <strong class="d-block">ALERTE: Arrivée imminente!</strong>
+              <span class="d-block"
+                >Ce client arrive dans
+                {{ getDaysUntilArrival(selectedArrivalDate.start) }} jour(s).
+                Préparez son accueil.</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Message si date passée -->
+        <div
+          *ngIf="getDaysUntilArrival(selectedArrivalDate.start) < 0"
+          class="alert alert-secondary mt-3"
+        >
+          <div class="d-flex align-items-center">
+            <i class="fas fa-info-circle me-2"></i>
+            <div>
+              <strong>Date d'arrivée passée</strong>
+              <span class="d-block">Cette date d'arrivée est déjà passée.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" (click)="editArrivalDate()">
+          <i class="fas fa-edit me-1"></i> Modifier date d'arrivée
+        </button>
+
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Détails Rendez-vous (existant) -->
+<div
+  class="modal fade"
+  id="eventDetailsModal"
+  tabindex="-1"
+  aria-hidden="true"
+  *ngIf="selectedEvent && selectedAppointment"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">📋 Détails du Rendez-vous</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          (click)="closeModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Informations du rendez-vous -->
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Client</label>
+              <p class="mb-0">{{ selectedEvent.extendedProps.clientName }}</p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Docteur</label>
+              <p class="mb-0">{{ selectedEvent.extendedProps.doctorName }}</p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Procédure</label>
+              <p class="mb-0">{{ selectedEvent.extendedProps.category }}</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Date et heure</label>
+              <p class="mb-0">
+                <i class="fas fa-calendar text-primary me-1"></i>
+                {{ selectedEvent.start | date: "dd/MM/yyyy" }}
+                <i class="fas fa-clock text-primary ms-2 me-1"></i>
+                {{ selectedEvent.start | date: "HH:mm" }}
+              </p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Durée</label>
+              <p class="mb-0">{{ getFormattedDuration(selectedEvent) }}</p>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Statut</label>
+              <p class="mb-0">
+                <span
+                  class="badge ms-2"
+                  [ngClass]="
+                    getEventStatusClass(selectedEvent.extendedProps.status)
+                  "
+                >
+                  {{ getEventStatusText(selectedEvent.extendedProps.status) }}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes pour la mise à jour du statut -->
+        <div class="row mt-3">
+          <div class="col-12">
+            <label for="statusNotes" class="form-label"
+              >Notes (optionnel)</label
+            >
+            <textarea
+              id="statusNotes"
+              class="form-control"
+              rows="3"
+              placeholder="Ajouter des notes pour cette action..."
+              [(ngModel)]="statusUpdateNotes"
+            ></textarea>
+          </div>
+        </div>
+        <div
+          class="alert alert-info mt-3"
+          *ngIf="selectedAppointment?.status === 'scheduled'"
+        >
+          <small>
+            <i class="fas fa-info-circle me-1"></i>
+            Ce RDV sera <strong>confirmé automatiquement</strong> 5 minutes
+            après l'heure programmée.
+          </small>
+        </div>
+
+        <div
+          class="alert alert-info mt-3"
+          *ngIf="
+            selectedAppointment?.status === 'scheduled' ||
+            selectedAppointment?.status === 'confirmed'
+          "
+        >
+          <small>
+            <i class="fas fa-info-circle me-1"></i>
+            Ce RDV sera <strong>terminé automatiquement</strong> après la date
+            et heure prévues.
+          </small>
+        </div>
+
+        <!-- Actions selon le statut -->
+        <div class="row mt-4">
+          <div class="col-12">
+            <div class="d-flex flex-wrap gap-2">
+              <!-- Bouton Modifier -->
+              <button
+                *ngIf="canEdit()"
+                class="btn btn-warning"
+                (click)="editAppointment()"
+              >
+                <i class="fas fa-edit me-1"></i> Modifier
+              </button>
+
+              <!-- Bouton Confirmer -->
+              <button
+                *ngIf="selectedAppointment?.status === 'scheduled'"
+                class="btn btn-success"
+                (click)="confirmAppointment()"
+              >
+                <i class="fas fa-check me-1"></i> Confirmer maintenant
+              </button>
+
+              <!-- Bouton Marquer comme terminé -->
+              <button
+                *ngIf="selectedAppointment?.status === 'confirmed'"
+                class="btn btn-info"
+                (click)="completeAppointment()"
+              >
+                <i class="fas fa-check-double me-1"></i> Marquer comme terminé
+              </button>
+
+              <!-- Bouton Annuler -->
+              <button
+                *ngIf="canCancel()"
+                class="btn btn-danger"
+                (click)="cancelAppointment()"
+              >
+                <i class="fas fa-times me-1"></i> Annuler
+              </button>
+
+              <!-- Bouton Supprimer -->
+              <button
+                class="btn btn-outline-danger"
+                (click)="deleteAppointment()"
+              >
+                <i class="fas fa-trash me-1"></i> Supprimer
+              </button>
+
+              <!-- Bouton Fermer -->
+              <button class="btn btn-secondary ms-auto" data-bs-dismiss="modal">
+                <i class="fas fa-times"></i> Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Édition Date d'Arrivée SEULEMENT -->
+<div
+  class="modal fade"
+  id="editArrivalDateOnlyModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-info">
+        <h5 class="modal-title">
+          <i class="fas fa-plane-arrival me-2"></i>
+          Modifier Date d'Arrivée
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          (click)="closeEditArrivalModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Informations du client -->
+        <div class="alert alert-info mb-3">
+          <h6 class="mb-1">{{ editData.clientName }}</h6>
+          <p class="mb-0 small">{{ editData.category }}</p>
+        </div>
+
+        <!-- Formulaire d'édition date d'arrivée -->
+        <form *ngIf="editData && editData.editType === 'arrival'">
+          <div class="mb-3">
+            <label class="form-label fw-bold">
+              <i class="fas fa-plane-arrival text-success me-1"></i>
+              Date d'arrivée *
+            </label>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="editData.arrivalDate"
+              name="arrivalDate"
+              required
+              [ngModelOptions]="{ standalone: true }"
+            />
+            <small class="text-muted">Date d'arrivée du client</small>
+          </div>
+
+          <div class="alert alert-light border mt-3">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Un email sera envoyé au client pour l'informer du changement de
+              date.
+            </small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          (click)="closeEditArrivalModal()"
+        >
+          <i class="fas fa-times me-1"></i> Annuler
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-info"
+          (click)="saveArrivalDateOnly()"
+          [disabled]="isSaving || !editData.arrivalDate"
+        >
+          <span *ngIf="!isSaving">
+            <i class="fas fa-plane-arrival me-1"></i> Modifier arrivée
+          </span>
+          <span *ngIf="isSaving">
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Enregistrement...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Édition RDV SEULEMENT -->
+<div
+  class="modal fade"
+  id="editAppointmentOnlyModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="fas fa-calendar-alt me-2"></i>
+          Modifier Date du Rendez-vous
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+          (click)="closeEditAppointmentModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Informations du client -->
+        <div class="alert alert-info mb-3">
+          <h6 class="mb-1">{{ editData.clientName }}</h6>
+          <p class="mb-0 small">{{ editData.category }}</p>
+        </div>
+
+        <!-- Formulaire d'édition RDV -->
+        <form *ngIf="editData && editData.editType === 'appointment'">
+          <div class="mb-3">
+            <label class="form-label fw-bold">
+              <i class="fas fa-calendar-alt text-primary me-1"></i>
+              Date du RDV *
+            </label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              [(ngModel)]="editData.appointmentDateTime"
+              name="appointmentDateTime"
+              required
+              [ngModelOptions]="{ standalone: true }"
+            />
+            <small class="text-muted">Date et heure du rendez-vous</small>
+          </div>
+
+          <div class="alert alert-light border mt-3">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Un email sera envoyé au client pour l'informer du changement de
+              date.
+            </small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+          (click)="closeEditAppointmentModal()"
+        >
+          <i class="fas fa-times me-1"></i> Annuler
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-warning"
+          (click)="saveAppointmentOnly()"
+          [disabled]="isSaving || !editData.appointmentDateTime"
+        >
+          <span *ngIf="!isSaving">
+            <i class="fas fa-calendar-alt me-1"></i> Modifier RDV
+          </span>
+          <span *ngIf="isSaving">
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Enregistrement...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

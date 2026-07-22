@@ -1,0 +1,73 @@
+:host {
+    display: block;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.bg-primary {
+    background: linear-gradient(45deg, #4e73df, #2e59d9) !important;
+}
+
+.bg-success {
+    background: linear-gradient(45deg, #1cc88a, #17a673) !important;
+}
+
+.bg-info {
+    background: linear-gradient(45deg, #36b9cc, #2c9faf) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(45deg, #f6c23e, #f4b619) !important;
+}
+
+canvas {
+    max-height: 400px;
+}
+:host {
+  display: block;
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-body {
+  padding: 1.5rem;
+  position: relative;
+}
+
+/* Style crucial pour les canvas */
+canvas {
+  width: 100% !important;
+  height: 400px !important;
+  max-height: 400px;
+}
+
+.bg-primary {
+  background: linear-gradient(45deg, #4e73df, #2e59d9) !important;
+}
+
+.bg-success {
+  background: linear-gradient(45deg, #1cc88a, #17a673) !important;
+}
+
+.bg-info {
+  background: linear-gradient(45deg, #36b9cc, #2c9faf) !important;
+}
+
+.bg-warning {
+  background: linear-gradient(45deg, #f6c23e, #f4b619) !important;
+}
+
+/* Style pour les cartes de résumé */
+.card .fa-2x {
+  opacity: 0.8;
+}

@@ -1,0 +1,175 @@
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <h4 class="mb-0">Statistiques des Docteurs</h4>
+        <button class="btn btn-outline-primary" (click)="exportData()">
+          <i class="fas fa-download me-2"></i>Exporter CSV
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overall Statistics Chart -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <canvas #overallChart></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Rate and Monthly Trend -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <canvas #successRateChart></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <canvas #monthlyTrendChart></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Doctor Detail Chart -->
+  <div class="row" *ngIf="selectedDoctor">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            Détails - Dr. {{ selectedDoctor.personalInfo.name }}
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-8">
+              <canvas #doctorDetailChart></canvas>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3">
+                <h6>Informations Clés</h6>
+                <div class="mb-3">
+                  <strong>Spécialité:</strong><br />
+                  <span class="badge bg-info">{{
+                    selectedDoctor.personalInfo.specialties
+                  }}</span>
+                </div>
+                <div class="mb-3">
+                  <strong>Expérience:</strong><br />
+                  {{ selectedDoctor.personalInfo.yearsOfExperience || 0 }} ans
+                </div>
+                <div class="mb-3">
+                  <strong>Efficacité:</strong><br />
+                  <span
+                    [class.text-success]="
+                      selectedDoctor.statistics.successRate >= 90
+                    "
+                    [class.text-warning]="
+                      selectedDoctor.statistics.successRate >= 70 &&
+                      selectedDoctor.statistics.successRate < 90
+                    "
+                    [class.text-danger]="
+                      selectedDoctor.statistics.successRate < 70
+                    "
+                    class="fw-bold"
+                  >
+                    {{
+                      selectedDoctor.statistics.successRate | number : "1.0-0"
+                    }}%
+                  </span>
+                </div>
+                <div class="mb-3">
+                  <strong>Taux d'achèvement:</strong><br />
+                  {{
+                    (selectedDoctor.statistics.completedOperations /
+                      selectedDoctor.statistics.totalOperations) *
+                      100 | number : "1.0-0"
+                  }}%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row" *ngIf="doctors.length > 0">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h4 class="mb-0">{{ doctors.length }}</h4>
+              <span>Docteurs Total</span>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="fas fa-user-md fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h4 class="mb-0">
+                {{ getTotalOperations() }}
+              </h4>
+              <span>Opérations Total</span>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="fas fa-procedures fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-info text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h4 class="mb-0">
+                {{ getCompletedOperations() }}
+              </h4>
+              <span>Opérations Terminées</span>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="fas fa-check-circle fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+              <h4 class="mb-0">
+                {{ getAverageSuccessRate() | number : "1.0-0" }}%
+              </h4>
+              <span>Taux de Succès Moyen</span>
+            </div>
+            <div class="flex-shrink-0">
+              <i class="fas fa-chart-line fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

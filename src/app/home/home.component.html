@@ -1,0 +1,243 @@
+<app-notification></app-notification>
+
+<div class="dashboard-container">
+  <!-- Header Simple -->
+  <header class="dashboard-header fixed-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <img
+          src="assets/images/logos/logo-wrappixel.svg"
+          alt="Logo"
+          class="header-logo"
+        />
+        <h1 class="app-title">TuniCure Dashboard</h1>
+      </div>
+
+      <div
+        class="user-dropdown-wrapper d-flex align-items-center position-relative"
+      >
+        <button
+          type="button"
+          class="btn btn-primary d-flex align-items-center gap-2"
+          (click)="toggleUserMenu()"
+          aria-haspopup="true"
+          [attr.aria-expanded]="showUserMenu"
+        >
+          <img
+            [src]="getEmployeeImage()"
+            (error)="onAvatarError($event)"
+            alt="avatar"
+            class="rounded-circle user-avatar"
+            width="35"
+            height="35"
+          />
+          <span class="d-none d-md-inline">
+            {{ (currentUser$ | async)?.name || "Utilisateur" }}
+          </span>
+          <i class="ti ti-chevron-down ms-1"></i>
+        </button>
+
+        <div
+          class="user-dropdown-menu dropdown-menu dropdown-menu-end"
+          [class.show]="showUserMenu"
+        >
+          <div class="px-3 py-2">
+            <div class="d-flex align-items-center">
+              <img
+                [src]="getEmployeeImage()"
+                (error)="onAvatarError($event)"
+                alt="avatar"
+                class="rounded-circle me-2"
+                width="48"
+                height="48"
+              />
+              <div class="user-info">
+                <div class="fw-bold">
+                  {{ (currentUser$ | async)?.name || "Utilisateur" }}
+                </div>
+                <div class="text-muted small">
+                  {{ (currentUser$ | async)?.email || "—" }}
+                </div>
+                <div class="text-muted small">
+                  Rôle:
+                  <span class="text-capitalize">{{
+                    (currentUser$ | async)?.role || "—"
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div><hr class="dropdown-divider m-0" /></div>
+
+          <button class="dropdown-item" (click)="logout()">
+            <i class="me-2">🚪</i> Déconnexion
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Layout -->
+  <div class="dashboard-layout">
+    <!-- Sidebar Minimaliste -->
+    <aside class="dashboard-sidebar">
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li class="nav-item" [class.active]="isActive('dashboard')">
+            <button class="nav-link" (click)="setView('dashboard')">
+              <i class="nav-icon">📊</i>
+              <span class="nav-text">Dashboard</span>
+            </button>
+          </li>
+
+          <li class="nav-item" [class.active]="isActive('employees')">
+            <button class="nav-link" (click)="setView('employees')">
+              <i class="nav-icon">👥</i>
+              <span class="nav-text">Employés</span>
+            </button>
+          </li>
+
+          <li class="nav-item" [class.active]="isActive('doctors')">
+            <button class="nav-link" (click)="setView('doctors')">
+              <i class="nav-icon">🩺</i>
+              <span class="nav-text">Docteurs</span>
+            </button>
+          </li>
+
+          <li class="nav-item" [class.active]="isActive('orders')">
+            <button class="nav-link" (click)="setView('orders')">
+              <i class="nav-icon">📦</i>
+              <span class="nav-text">Commandes</span>
+            </button>
+          </li>
+
+          <li class="nav-item" [class.active]="isActive('calendar')">
+            <button class="nav-link" (click)="setView('calendar')">
+              <i class="nav-icon">📅</i>
+              <span class="nav-text">Calendrier</span>
+            </button>
+          </li>
+
+          <li class="nav-item" [class.active]="isActive('gcategories')">
+            <button class="nav-link" (click)="setView('gcategories')">
+              <i class="nav-icon">🏷️</i>
+              <span class="nav-text">Catégories Générales</span>
+            </button>
+          </li>
+
+          <li class="nav-item" [class.active]="isActive('categories')">
+            <button class="nav-link" (click)="setView('categories')">
+              <i class="nav-icon">📂</i>
+              <span class="nav-text">Sous-Catégories</span>
+            </button>
+          </li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <small>v0.1</small>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+      <!-- Dashboard Content -->
+      <div class="content-area">
+        <!-- Dashboard View -->
+        <div *ngIf="currentView === 'dashboard'" class="dashboard-view">
+          <div class="welcome-section">
+            <h3>
+              Bienvenue,
+              {{ (currentUser$ | async)?.name || "Administrateur" }} 👋
+            </h3>
+            <p>Que souhaitez-vous gérer aujourd'hui ?</p>
+          </div>
+
+          <div class="modules-grid">
+            <div class="module-card" (click)="setView('employees')">
+              <div class="module-icon">👥</div>
+              <div class="module-content">
+                <h4>Employés</h4>
+                <p>Gestion des employés, recherche et filtres avancés</p>
+              </div>
+              <button class="module-btn">Ouvrir →</button>
+            </div>
+
+            <div class="module-card" (click)="setView('doctors')">
+              <div class="module-icon">🩺</div>
+              <div class="module-content">
+                <h4>Docteurs</h4>
+                <p>Liste des médecins, validation et statistiques</p>
+              </div>
+              <button class="module-btn">Ouvrir →</button>
+            </div>
+
+            <div class="module-card" (click)="setView('orders')">
+              <div class="module-icon">📦</div>
+              <div class="module-content">
+                <h4>Commandes</h4>
+                <p>Suivi des commandes et états de livraison</p>
+              </div>
+              <button class="module-btn">Ouvrir →</button>
+            </div>
+
+            <div class="module-card" (click)="setView('calendar')">
+              <div class="module-icon">📅</div>
+              <div class="module-content">
+                <h4>Calendrier</h4>
+                <p>Rendez-vous et planning des arrivées</p>
+              </div>
+              <button class="module-btn">Ouvrir →</button>
+            </div>
+
+            <div class="module-card" (click)="setView('gcategories')">
+              <div class="module-icon">🏷️</div>
+              <div class="module-content">
+                <h4>Catégories Générales</h4>
+                <p>Organisation hiérarchique principale</p>
+              </div>
+              <button class="module-btn">Ouvrir →</button>
+            </div>
+
+            <div class="module-card" (click)="setView('categories')">
+              <div class="module-icon">📂</div>
+              <div class="module-content">
+                <h4>Sous-Catégories</h4>
+                <p>Classification détaillée des procédures</p>
+              </div>
+              <button class="module-btn">Ouvrir →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Module Views -->
+        <div *ngIf="currentView !== 'dashboard'" class="module-view">
+          <div class="module-header">
+            <h3>{{ pageTitle }}</h3>
+            <button class="btn btn-secondary" (click)="setView('dashboard')">
+              ← Retour au dashboard
+            </button>
+          </div>
+
+          <div class="module-content-area">
+            <ng-container [ngSwitch]="currentView">
+              <app-employee-list
+                *ngSwitchCase="'employees'"
+              ></app-employee-list>
+              <app-doctor *ngSwitchCase="'doctors'"></app-doctor>
+              <app-commande *ngSwitchCase="'orders'"></app-commande>
+              <app-calendrier *ngSwitchCase="'calendar'"></app-calendrier>
+              <app-general-category-manager
+                *ngSwitchCase="'gcategories'"
+              ></app-general-category-manager>
+              <app-category-manager
+                *ngSwitchCase="'categories'"
+              ></app-category-manager>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

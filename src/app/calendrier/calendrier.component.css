@@ -1,0 +1,73 @@
+.custom-calendar {
+    min-height: 600px;
+}
+
+/* Style des événements */
+.calendar-event {
+    font-size: 0.85em;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Légende */
+.legend-color {
+    border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .custom-calendar {
+        min-height: 400px;
+    }
+
+    .fc-header-toolbar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .fc-header-toolbar .fc-toolbar-chunk {
+        text-align: center;
+    }
+}
+
+/* Amélioration de l'apparence */
+.fc-event {
+    border: none;
+    font-weight: 500;
+}
+
+.fc-event:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+.fc-day-today {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Ajouter dans calendrier.component.css */
+.btn-arrival-only {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    border-color: #138496;
+    color: white;
+}
+
+.btn-appointment-save {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    border-color: #e0a800;
+    color: white;
+}
+
+.btn-arrival-only:hover {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    border-color: #117a8b;
+    color: white;
+}
+
+.btn-appointment-save:hover {
+    background: linear-gradient(135deg, #e0a800, #d39e00);
+    border-color: #d39e00;
+    color: white;
+}

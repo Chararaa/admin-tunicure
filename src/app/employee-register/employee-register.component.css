@@ -1,0 +1,29 @@
+/* components/employee-register/employee-register.component.css */
+.workflow-step {
+  background: #f8f9fa;
+  border-left: 4px solid #007bff;
+}
+
+.step-number {
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #495057;
+}
+
+.card {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(45deg, #0056b3, #004085);
+}

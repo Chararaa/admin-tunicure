@@ -1,0 +1,144 @@
+/* CSS pour corriger le tableau qui dépasse de l'écran */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+/* Définition des largeurs spécifiques pour chaque colonne */
+.table-responsive table {
+  width: 100%;
+  min-width: 1200px; /* Largeur minimale ajustée */
+  margin-bottom: 0;
+}
+
+/* Largeurs spécifiques pour chaque colonne */
+.table-responsive th:nth-child(1), /* Client */
+.table-responsive td:nth-child(1) {
+  min-width: 180px;
+  max-width: 200px;
+  white-space: normal; /* Permet le retour à la ligne */
+}
+
+.table-responsive th:nth-child(2), /* Email */
+.table-responsive td:nth-child(2) {
+  min-width: 200px;
+  max-width: 250px;
+  word-break: break-word; /* Coupe les longs emails */
+}
+
+.table-responsive th:nth-child(3), /* Téléphone */
+.table-responsive td:nth-child(3) {
+  min-width: 120px;
+  max-width: 150px;
+}
+
+.table-responsive th:nth-child(4), /* Procédure */
+.table-responsive td:nth-child(4) {
+  min-width: 150px;
+  max-width: 180px;
+  white-space: normal;
+}
+
+.table-responsive th:nth-child(5), /* Pack */
+.table-responsive td:nth-child(5) {
+  min-width: 100px;
+  max-width: 120px;
+}
+
+.table-responsive th:nth-child(6), /* Statut */
+.table-responsive td:nth-child(6) {
+  min-width: 140px;
+  max-width: 160px;
+}
+
+.table-responsive th:nth-child(7), /* Date */
+.table-responsive td:nth-child(7) {
+  min-width: 120px;
+  max-width: 140px;
+}
+
+.table-responsive th:nth-child(8), /* Actions */
+.table-responsive td:nth-child(8) {
+  min-width: 100px;
+  max-width: 120px;
+  text-align: center;
+}
+
+/* Style pour les en-têtes fixes lors du défilement */
+.table-responsive thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-responsive thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+  padding: 12px 15px;
+}
+
+/* Style pour les lignes du tableau */
+.table-responsive tbody td {
+  padding: 12px 15px;
+  vertical-align: middle;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Style pour la ligne sélectionnée */
+.table-active {
+  background-color: rgba(13, 110, 253, 0.05) !important;
+}
+
+/* Style pour les badges */
+.table-responsive .badge {
+  font-size: 0.8em;
+  padding: 5px 10px;
+  font-weight: 500;
+}
+
+/* Style pour le texte des cellules */
+.table-responsive small {
+  font-size: 0.85em;
+  color: #6c757d;
+}
+
+/* Style pour le bouton Détails */
+.table-responsive .btn-outline-primary {
+  padding: 5px 12px;
+  font-size: 0.85em;
+  border-radius: 4px;
+}
+
+/* Responsive pour petits écrans */
+@media (max-width: 1400px) {
+  .table-responsive table {
+    min-width: 1000px;
+  }
+  
+  .table-responsive th:nth-child(1),
+  .table-responsive td:nth-child(1) {
+    min-width: 150px;
+  }
+  
+  .table-responsive th:nth-child(2),
+  .table-responsive td:nth-child(2) {
+    min-width: 180px;
+  }
+}
+
+/* Indicateur visuel de défilement */
+.table-responsive:after {
+  content: "↔ Défilement horizontal disponible";
+  display: block;
+  text-align: center;
+  font-size: 0.8em;
+  color: #6c757d;
+  padding: 5px;
+  background: linear-gradient(90deg, transparent, #f8f9fa, transparent);
+  margin-top: 5px;
+}
