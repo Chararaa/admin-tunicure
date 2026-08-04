@@ -1208,6 +1208,217 @@ async function sendPaymentConfirmationEmail(emailData) {
   }
 }
 
+async function sendNewOrderNotificationToAdmin(order) {
+  try {
+    const ADMIN_EMAIL = "contact@tunicure.com";
+    const clientName = order.clientInfo?.name || "Unknown";
+    const clientEmail = order.clientInfo?.email || "Not provided";
+    const clientPhone = order.clientInfo?.phone || "Not provided";
+    const clientCountry = order.clientInfo?.country || "Not provided";
+    const procedure = order.categoryName || order.generalCategoryName || "Not specified";
+    const pack = order.pack || "Not specified";
+    const submittedAt = new Date().toLocaleString("fr-FR");
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: ADMIN_EMAIL,
+      subject: `🔔 New Booking Received — ${clientName}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 680px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #073840, #0a5260); color: white; padding: 28px 30px; border-radius: 10px 10px 0 0; }
+                .header h1 { margin: 0; font-size: 22px; }
+                .header p { margin: 8px 0 0 0; opacity: 0.85; font-size: 14px; }
+                .content { background: #f4faf9; padding: 30px; border-radius: 0 0 10px 10px; }
+                .badge { display: inline-block; background: #1FDFA9; color: #073840; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 20px; }
+                .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 16px; border-left: 4px solid #1FDFA9; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+                .card h3 { margin: 0 0 14px 0; color: #073840; font-size: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+                table { width: 100%; border-collapse: collapse; }
+                td { padding: 8px 4px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+                td:first-child { color: #666; width: 40%; }
+                td:last-child { font-weight: 600; color: #222; }
+                .cta { text-align: center; margin-top: 24px; }
+                .cta a { background: linear-gradient(135deg, #073840, #1FDFA9); color: white; padding: 13px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 15px; display: inline-block; }
+                .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔔 New Booking Received</h1>
+                    <p>A new order has just been submitted on tunicure.com</p>
+                </div>
+                <div class="content">
+                    <span class="badge">⏱ ${submittedAt}</span>
+
+                    <div class="card">
+                        <h3>👤 Client Information</h3>
+                        <table>
+                            <tr><td>Full Name</td><td>${clientName}</td></tr>
+                            <tr><td>Email</td><td>${clientEmail}</td></tr>
+                            <tr><td>Phone</td><td>${clientPhone}</td></tr>
+                            <tr><td>Country</td><td>${clientCountry}</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>🏥 Procedure Details</h3>
+                        <table>
+                            <tr><td>Category</td><td>${order.generalCategoryName || "Not specified"}</td></tr>
+                            <tr><td>Procedure</td><td>${procedure}</td></tr>
+                            <tr><td>Pack</td><td>${pack}</td></tr>
+                        </table>
+                    </div>
+
+                    ${
+                      order.medicalInfo
+                        ? `
+                    <div class="card">
+                        <h3>🩺 Medical Info</h3>
+                        <table>
+                            <tr><td>Age</td><td>${order.clientInfo?.age || "N/A"}</td></tr>
+                            <tr><td>Weight</td><td>${order.clientInfo?.weight ? order.clientInfo.weight + " kg" : "N/A"}</td></tr>
+                            <tr><td>Height</td><td>${order.clientInfo?.height ? order.clientInfo.height + " cm" : "N/A"}</td></tr>
+                            <tr><td>Smokes</td><td>${order.medicalInfo?.smokes || "N/A"}</td></tr>
+                            <tr><td>Allergies</td><td>${order.medicalInfo?.allergies || "None"}</td></tr>
+                        </table>
+                    </div>
+                    `
+                        : ""
+                    }
+
+                    <div class="cta">
+                        <a href="https://admin.tunicure.com" target="_blank">View Order in Dashboard →</a>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>TuniCure Admin Notification — Do not reply to this email</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ Admin notification email sent:", result.messageId);
+    return result;
+  } catch (error) {
+    console.log("❌ Error sending admin notification email:", error.message);
+    throw error;
+  }
+}
+
+async function sendBookingConfirmationToClient(order) {
+  try {
+    const clientEmail = order.clientInfo?.email;
+    if (!clientEmail) {
+      console.log("⚠️ No client email found, skipping booking confirmation");
+      return;
+    }
+
+    const clientName = order.clientInfo?.name || "Client";
+    const procedure = order.categoryName || order.generalCategoryName || "your requested procedure";
+    const pack = order.pack || "Standard";
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: clientEmail,
+      subject: `✅ Booking Received — TuniCure`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 620px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #073840, #1FDFA9); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+                .header h1 { margin: 0; font-size: 24px; }
+                .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 14px; }
+                .content { background: #f4faf9; padding: 30px; border-radius: 0 0 10px 10px; }
+                .summary-card { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #1FDFA9; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+                .summary-card h3 { margin: 0 0 14px 0; color: #073840; font-size: 15px; }
+                table { width: 100%; border-collapse: collapse; }
+                td { padding: 8px 4px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+                td:first-child { color: #666; width: 40%; }
+                td:last-child { font-weight: 600; color: #222; }
+                .steps { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .steps h3 { color: #073840; margin: 0 0 16px 0; font-size: 15px; }
+                .step { display: flex; align-items: flex-start; margin-bottom: 14px; }
+                .step-num { background: #1FDFA9; color: #073840; border-radius: 50%; width: 24px; height: 24px; min-width: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin-right: 12px; margin-top: 2px; }
+                .contact-box { background: #e8faf5; border-radius: 8px; padding: 16px 20px; margin-top: 20px; border: 1px solid #b2edd8; text-align: center; }
+                .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>✅ Request Received!</h1>
+                    <p>Thank you for trusting TuniCure with your healthcare journey.</p>
+                </div>
+
+                <div class="content">
+                    <p>Dear <strong>${clientName}</strong>,</p>
+                    <p>We have successfully received your booking request. Our team will review your details and contact you shortly to discuss the next steps.</p>
+
+                    <div class="summary-card">
+                        <h3>📋 Your Booking Summary</h3>
+                        <table>
+                            <tr><td>Procedure</td><td>${procedure}</td></tr>
+                            <tr><td>Pack</td><td>${pack}</td></tr>
+                            <tr><td>Submitted</td><td>${new Date().toLocaleString("fr-FR")}</td></tr>
+                            <tr><td>Status</td><td>⏳ Under Review</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="steps">
+                        <h3>🗺️ What Happens Next?</h3>
+                        <div class="step">
+                            <div class="step-num">1</div>
+                            <div><strong>Team Review</strong><br><span style="color:#666;font-size:13px;">Our medical team will review your file within 24–48 hours.</span></div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">2</div>
+                            <div><strong>Phone Call</strong><br><span style="color:#666;font-size:13px;">We will contact you to discuss your case and confirm details.</span></div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">3</div>
+                            <div><strong>Doctor Assignment</strong><br><span style="color:#666;font-size:13px;">A specialist will be assigned and will provide a medical assessment.</span></div>
+                        </div>
+                        <div class="step">
+                            <div class="step-num">4</div>
+                            <div><strong>Appointment Confirmed</strong><br><span style="color:#666;font-size:13px;">You will receive a confirmation email with all your appointment details.</span></div>
+                        </div>
+                    </div>
+
+                    <div class="contact-box">
+                        <p style="margin:0;"><strong>Questions?</strong> We're here to help.</p>
+                        <p style="margin:6px 0 0 0;">📞 <strong>(+44) 7403904850</strong> &nbsp;|&nbsp; ✉️ <strong>contact@tunicure.com</strong></p>
+                    </div>
+                </div>
+
+                <div class="footer">
+                    <p>© TuniCure — This is an automated message, please do not reply directly.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+      `,
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log("✅ Booking confirmation sent to client:", result.messageId);
+    return result;
+  } catch (error) {
+    console.log("❌ Error sending booking confirmation to client:", error.message);
+    throw error;
+  }
+}
+
 // Exportez toutes les nouvelles fonctions
 module.exports = {
   sendEmailToDoctor,
@@ -1220,4 +1431,6 @@ module.exports = {
   sendArrivalDateUpdateEmail,
   sendInvoiceEmail,
   sendPaymentConfirmationEmail,
+  sendNewOrderNotificationToAdmin,
+  sendBookingConfirmationToClient,
 };

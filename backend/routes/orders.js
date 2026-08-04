@@ -11,6 +11,8 @@ const {
   sendEmailToDoctor,
   sendEmailToClient,
   sendDoctorRemarksEmailToClient,
+  sendNewOrderNotificationToAdmin,
+  sendBookingConfirmationToClient,
 } = require("../utils/emailService");
 
 // Configuration Multer pour l'upload d'images avec dossiers par client
@@ -181,6 +183,14 @@ router.post("/", upload.array("photos", 5), async (req, res) => {
     const populatedOrder = await Order.findById(order._id)
       .populate("generalCategory")
       .populate("category");
+
+    // 🔔 Send emails non-blocking (don't await so the response is immediate)
+    sendNewOrderNotificationToAdmin(orderData).catch((err) =>
+      console.error("❌ Admin notification email failed:", err.message)
+    );
+    sendBookingConfirmationToClient(orderData).catch((err) =>
+      console.error("❌ Client confirmation email failed:", err.message)
+    );
 
     res.status(201).json({
       success: true,
