@@ -91,6 +91,8 @@ app.use("/api/categories", require("./routes/category"));
 app.use("/api/payment", paymentRoutes);
 app.use("/api/verify", paymentRoutes);
 app.use("/api/countries", require("./routes/countries"));
+app.use("/api/contact", require("./routes/contact"));
+
 
 // ✅ Welcome Route (mon code)
 app.get("/", (req, res) => {

@@ -14,6 +14,10 @@ const {
   sendNewOrderNotificationToAdmin,
   sendBookingConfirmationToClient,
 } = require("../utils/emailService");
+const {
+  sendWhatsAppBookingNotification,
+} = require("../utils/whatsappService");
+
 
 // Configuration Multer pour l'upload d'images avec dossiers par client
 const MIME_TYPE = {
@@ -184,13 +188,17 @@ router.post("/", upload.array("photos", 5), async (req, res) => {
       .populate("generalCategory")
       .populate("category");
 
-    // 🔔 Send emails non-blocking (don't await so the response is immediate)
+    // 🔔 Send notifications non-blocking (emails + WhatsApp)
     sendNewOrderNotificationToAdmin(orderData).catch((err) =>
       console.error("❌ Admin notification email failed:", err.message)
     );
     sendBookingConfirmationToClient(orderData).catch((err) =>
       console.error("❌ Client confirmation email failed:", err.message)
     );
+    sendWhatsAppBookingNotification(orderData).catch((err) =>
+      console.error("❌ WhatsApp booking notification failed:", err.message)
+    );
+
 
     res.status(201).json({
       success: true,
