@@ -251,15 +251,39 @@ router.patch("/:id/verify", async (req, res) => {
 // UPDATE doctor
 router.put("/:id", async (req, res) => {
   try {
-    const doctor = await Doctor.findByIdAndUpdate(req.params.id, req.body, {
+    const doctorId = req.params.id;
+    const updateData = req.body;
+
+    // Si l'email est modifié, vérifier qu'il n'est pas pris par un autre docteur
+    if (updateData.personalInfo && updateData.personalInfo.email) {
+      const existing = await Doctor.findOne({
+        "personalInfo.email": updateData.personalInfo.email,
+        _id: { $ne: doctorId },
+      });
+      if (existing) {
+        return res.status(400).json({
+          error: "Cet email est déjà utilisé par un autre docteur",
+        });
+      }
+    }
+
+    const doctor = await Doctor.findByIdAndUpdate(doctorId, updateData, {
       new: true,
-      runValidators: true,
+      runValidators: false,
     });
+
+    if (!doctor) {
+      return res.status(404).json({ error: "Docteur non trouvé" });
+    }
+
+    console.log("✅ Docteur mis à jour avec succès ID:", doctor._id);
     res.json(doctor);
   } catch (error) {
+    console.error("❌ Erreur mise à jour docteur:", error);
     res.status(400).json({ error: error.message });
   }
 });
+
 
 // ✅ DELETE doctor (SUPPRESSION PHYSIQUE - CORRIGÉ)
 router.delete("/:id", async (req, res) => {

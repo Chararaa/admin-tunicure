@@ -9,37 +9,10 @@ const doctorSchema = new mongoose.Schema({
     specialties: {
       type: [String],
       required: true,
-  enum: [
-   
-    "Plastic Surgery",
-    "Rhinoplasty",
-    "Liposuction",
-    "Breast Augmentation",
-    "Tummy Tuck",
-    "BBL",
-
-    "Bariatric Surgery",
-    "Gastric Sleeve",
-
-   
-    "Dental Surgery",
-    "Digital Smile Design",
-    "Full Digital Dentistry",
-    "Implantology",
-
-   
-    "Hair Transplant",
-
-   
-    "Ophthalmology",
-    "Maxillofacial Surgery",
-, "General, Digestive, Oncologic, Colorectal and Bariatric Surgeon",
-    'Maxillofacial Surgeon', "Professor & Head of Department - Plastic, Reconstructive, Aesthetic Surgery & Burn", "Plastic, Reconstructive and Aesthetic Surgeon",
-    "MD, FEBO – Ophthalmologist"
-  ],
-
+      default: [],
     },
     licenseNumber: String,
+
     yearsOfExperience: Number,
     image: { type: String },
     bannerImage: { type: String },

@@ -297,6 +297,37 @@ export class DoctorComponent implements OnInit {
   updateDoctor() {
     if (!this.updatedDoctor?._id) return;
 
+    // Collecter toutes les données des champs texte et composants imbriqués
+    this.onEditEducationBlur();
+    this.onEditCertificationsBlur();
+    this.onEditLanguagesBlur();
+    this.onEditServicesBlur();
+    this.onEditExperienceHighlightsBlur();
+    this.onEditGalleryBlur();
+
+    if (this.updatedDoctor.personalInfo) {
+      if (!this.updatedDoctor.personalInfo.location) {
+        this.updatedDoctor.personalInfo.location = { country: '', international: false };
+      }
+      this.updatedDoctor.personalInfo.location.country = this.editLocationCountry || '';
+      this.updatedDoctor.personalInfo.location.international = this.editLocationInternational || false;
+    }
+
+    if (this.updatedDoctor.professionalInfo) {
+      this.updatedDoctor.professionalInfo.socialLinks = this.editSocialLinks || {};
+    }
+
+    if (this.updatedDoctor.appointmentInfo) {
+      this.updatedDoctor.appointmentInfo.bookingLink = this.editAppointmentInfo.bookingLink || '';
+      this.updatedDoctor.appointmentInfo.consultationFee = this.editAppointmentInfo.consultationFee || 0;
+    } else {
+      this.updatedDoctor.appointmentInfo = {
+        bookingLink: this.editAppointmentInfo.bookingLink || '',
+        consultationFee: this.editAppointmentInfo.consultationFee || 0,
+        beforeAfterGallery: []
+      };
+    }
+
     this.doctorService.updateDoctor(this.updatedDoctor._id, this.updatedDoctor as Doctor).subscribe({
       next: (updatedDoctor) => {
         const index = this.doctors.findIndex(d => d._id === updatedDoctor._id);
@@ -305,14 +336,16 @@ export class DoctorComponent implements OnInit {
           this.filteredDoctors = [...this.doctors];
           this.selectedDoctor = updatedDoctor;
         }
-        this.closeModal('editDoctorModal');
         this.closePopups();
+        alert('Docteur mis à jour avec succès !');
       },
       error: (error) => {
         console.error('Error updating doctor:', error);
+        alert('Erreur lors de la mise à jour : ' + (error.error?.error || error.message || 'Erreur inconnue'));
       }
     });
   }
+
 
   deleteDoctor() {
     if (!this.selectedDoctor || !this.selectedDoctor._id) {
