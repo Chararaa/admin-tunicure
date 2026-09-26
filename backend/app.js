@@ -5,7 +5,9 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 const path = require("path");
-require("dotenv").config();
+// ✅ Load backend/.env FIRST so MONGODB_URI and JWT_SECRET are available immediately
+require("dotenv").config({ path: "./backend/.env" });
+require("dotenv").config(); // fallback for root .env
 
 // ✅ Charger .env S'IL EXISTE, sinon continuer
 try {
